@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clipboard Organizer</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/themes.css">
+</head>
+<body class="theme-light theme-sunrise">
+    
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <h1>📋 Clipboard Organizer</h1>
+        </div>
+        <div class="header-right">
+            <button id="settingsBtn" class="icon-btn" title="Settings">⚙️</button>
+            <button id="themeToggle" class="icon-btn" title="Toggle Theme">🌓</button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 Search clips...">
+            </div>
+            
+            <nav class="category-nav">
+                <button class="category-btn active" data-category="all">
+                    📑 All Clips
+                </button>
+                <button class="category-btn" data-category="url">
+                    🔗 URLs
+                </button>
+                <button class="category-btn" data-category="email">
+                    📧 Emails
+                </button>
+                <button class="category-btn" data-category="phone">
+                    📞 Phone Numbers
+                </button>
+                <button class="category-btn" data-category="password">
+                    🔒 Passwords
+                </button>
+                <button class="category-btn" data-category="code">
+                    💻 Code Snippets
+                </button>
+                <button class="category-btn" data-category="text">
+                    📝 Text
+                </button>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button id="cleanupBtn" class="action-btn">🗑️ Cleanup Old</button>
+                <button id="exportBtn" class="action-btn">📤 Export</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="content-header">
+                <h2 id="contentTitle">All Clips</h2>
+                <span id="clipCount" class="clip-count">0 clips</span>
+            </div>
+            
+            <!-- Clips Grid -->
+            <div id="clipsGrid" class="clips-grid">
+                <!-- Clips will be dynamically loaded here -->
+            </div>
+            
+            <!-- Empty State -->
+            <div id="emptyState" class="empty-state">
+                <div class="empty-icon">📋</div>
+                <h3>No clips yet</h3>
+                <p>Start copying text and it will appear here automatically</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙️ Settings</h2>
+                <button class="close-btn">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h3>Selective Storage</h3>
+                    <p>Choose which types of content to automatically save</p>
+                    
+                    <div class="toggle-group">
+                        <label class="toggle-item">
+                            <input type="checkbox" data-category="url" checked>
+                            <span class="toggle-label">🔗 URLs</span>
+                        </label>
+                        <label class="toggle-item">
+                            <input type="checkbox" data-category="email" checked>
+                            <span class="toggle-label">📧 Emails</span>
+                        </label>
+                        <label class="toggle-item">
+                            <input type="checkbox" data-category="phone" checked>
+                            <span class="toggle-label">📞 Phone Numbers</span>
+                        </label>
+                        <label class="toggle-item">
+                            <input type="checkbox" data-category="password" checked>
+                            <span class="toggle-label">🔒 Passwords</span>
+                        </label>
+                        <label class="toggle-item">
+                            <input type="checkbox" data-category="code" checked>
+                            <span class="toggle-label">💻 Code Snippets</span>
+                        </label>
+                        <label class="toggle-item">
+                            <input type="checkbox" data-category="text" checked>
+                            <span class="toggle-label">📝 Text</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Password Security</h3>
+                    <p>Set a passkey to encrypt and protect password clips</p>
+                    
+                    <div id="passkeySetup">
+                        <input type="password" id="passkeyInput" placeholder="Enter passkey">
+                        <button id="setPasskeyBtn" class="primary-btn">Set Passkey</button>
+                    </div>
+                    
+                    <div id="passkeyStatus" style="display: none;">
+                        <p>✅ Passkey is configured</p>
+                        <button id="lockPasswordsBtn" class="secondary-btn">Lock Passwords</button>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Theme Selection</h3>
+                    <div class="theme-selector">
+                        <div class="theme-mode-toggle">
+                            <button class="mode-btn active" data-mode="light">☀️ Light</button>
+                            <button class="mode-btn" data-mode="dark">🌙 Dark</button>
+                        </div>
+                        
+                        <div class="theme-grid" id="themeGrid">
+                            <!-- Themes will be loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Unlock Modal -->
+    <div id="unlockModal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>🔒 Enter Passkey</h2>
+            </div>
+            <div class="modal-body">
+                <input type="password" id="unlockPasskeyInput" placeholder="Enter passkey">
+                <button id="unlockBtn" class="primary-btn">Unlock</button>
+                <p id="unlockError" class="error-msg" style="display: none;">Incorrect passkey</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/themes.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
