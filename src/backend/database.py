@@ -165,3 +165,24 @@ class ClipboardDatabase:
         """Close database connection"""
         if self.connection:
             self.connection.close()
+
+    def get_clip_by_id(self, clip_id: int) -> Optional[dict]:
+        cursor = self.connection.execute("SELECT * FROM clips WHERE id = ?", (clip_id,))
+        row = cursor.fetchone()
+        if row:
+            clip = dict(row)  # Convert SQLite Row object to dict automatically
+            return clip
+        return None
+    
+    def update_clip(self, clip_id: int, content: str, encrypted_data: Optional[bytes] = None) -> bool:
+        try:
+            self.connection.execute(
+                "UPDATE clips SET content = ?, encrypted_data = ? WHERE id = ?",
+                (content, encrypted_data, clip_id)
+            )
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f"Database error updating clip: {e}")
+            return False
+

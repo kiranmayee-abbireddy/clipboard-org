@@ -187,3 +187,25 @@ class ClipboardAPI:
                 pass
         self._database.add_clip(content, category, encrypted_data)
         return True
+
+
+    def update_clip_content(self, clip_id: int, new_content: str) -> bool:
+        try:
+            clip = self._database.get_clip_by_id(clip_id)
+            if not clip:
+                return False
+            # Update content (consider encryption depending on category)
+            category = clip['category']
+            encrypted_data = None
+            content_to_store = new_content
+            if category == 'password' and self._crypto_handler:
+                try:
+                    encrypted_data = self._crypto_handler.encrypt(new_content)
+                    content_to_store = "[Encrypted Password]"
+                except:
+                    pass
+            self._database.update_clip(clip_id, content_to_store, encrypted_data)
+            return True
+        except Exception as e:
+            print(f"Error updating clip content: {e}")
+            return False

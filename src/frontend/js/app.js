@@ -7,6 +7,7 @@ class ClipboardApp {
         this.categoryInfo = {};
         this.searchTimeout = null;
         this.passwordLocked = true;
+        this.setupPreviewModal();
         
         this.init();
     }
@@ -33,6 +34,116 @@ class ClipboardApp {
         });
     }
 
+    setupPreviewModal() {
+        this.previewModal = document.getElementById('previewModal');
+        this.previewContent = document.getElementById('previewContent');
+        this.previewEditContent = document.getElementById('previewEditContent');
+        this.previewTitle = document.getElementById('previewTitle');
+        this.previewCloseBtn = document.getElementById('previewCloseBtn');
+        this.previewCopyBtn = document.getElementById('previewCopyBtn');
+        this.previewEditBtn = document.getElementById('previewEditBtn');
+        this.previewSaveBtn = document.getElementById('previewSaveBtn');
+        this.previewCancelBtn = document.getElementById('previewCancelBtn');
+    
+        this.previewCloseBtn.addEventListener('click', () => this.closePreview());
+        this.previewModal.addEventListener('click', (e) => {
+          if (e.target === this.previewModal) this.closePreview();
+        });
+        this.previewCopyBtn.addEventListener('click', () => this.copyPreviewContent());
+        this.previewCopyBtn.addEventListener('click', () => this.copyPreviewContent());
+        this.previewEditBtn.addEventListener('click', () => this.enterEditMode());
+        this.previewCancelBtn.addEventListener('click', () => this.exitEditMode());
+        this.previewSaveBtn.addEventListener('click', () => this.saveEditedContent());
+      }
+    
+      openPreview(clip) {
+        this.currentPreviewClip = clip;
+        this.previewTitle.textContent = `Preview - ${clip.category}`;
+
+        this.previewContent.textContent = clip.content;
+        this.previewEditContent.value = clip.content;
+
+        // Show view mode, hide edit mode initially
+        this.previewContent.style.display = 'block';
+        this.previewEditContent.style.display = 'none';
+        this.previewCopyBtn.style.display = 'inline-block';
+        this.previewEditBtn.style.display = 'inline-block';
+        this.previewSaveBtn.style.display = 'none';
+        this.previewCancelBtn.style.display = 'none';
+
+        this.previewModal.style.display = 'block';
+      }
+      enterEditMode() {
+        this.previewContent.style.display = 'none';
+        this.previewEditContent.style.display = 'block';
+    
+        this.previewCopyBtn.style.display = 'none';
+        this.previewEditBtn.style.display = 'none';
+        this.previewSaveBtn.style.display = 'inline-block';
+        this.previewCancelBtn.style.display = 'inline-block';
+    
+        this.previewEditContent.focus();
+      }
+    
+      exitEditMode() {
+        this.previewContent.style.display = 'block';
+        this.previewEditContent.style.display = 'none';
+    
+        this.previewCopyBtn.style.display = 'inline-block';
+        this.previewEditBtn.style.display = 'inline-block';
+        this.previewSaveBtn.style.display = 'none';
+        this.previewCancelBtn.style.display = 'none';
+    
+        // Reset textarea content to last saved clip content
+        this.previewEditContent.value = this.currentPreviewClip.content;
+      }
+    
+      async saveEditedContent() {
+        const newContent = this.previewEditContent.value.trim();
+        if (!newContent) {
+          alert('Content cannot be empty!');
+          return;
+        }
+    
+        if (newContent === this.currentPreviewClip.content) {
+          this.exitEditMode();
+          return;
+        }
+    
+        try {
+          // Call backend API to update clip content
+          // Assuming you add an API method `update_clip_content(clipId, content)`
+          const success = await window.pywebview.api.update_clip_content(this.currentPreviewClip.id, newContent);
+          if (success) {
+            this.showNotification('✅ Clip updated!');
+            // Update local clip content and UI
+            this.currentPreviewClip.content = newContent;
+            this.previewContent.textContent = newContent;
+            this.exitEditMode();
+            // Reload clips list if desired
+            await this.loadClips(this.currentCategory);
+          } else {
+            alert('Failed to update clip.');
+          }
+        } catch (error) {
+          console.error('Update clip failed:', error);
+          alert('Error updating clip.');
+        }
+      }
+    
+      closePreview() {
+        this.previewModal.style.display = 'none';
+      }
+    
+      async copyPreviewContent() {
+        if (!this.currentPreviewClip) return;
+        try {
+          await navigator.clipboard.writeText(this.currentPreviewClip.content);
+          this.showNotification('Copied preview content to clipboard!');
+        } catch {
+          alert('Failed to copy to clipboard');
+        }
+      }
     // ============= Data Loading =============
 
     async loadCategoryInfo() {
@@ -164,6 +275,12 @@ class ClipboardApp {
     attachClipEventListeners() {
         document.querySelectorAll('.clip-card').forEach(card => {
             const clipId = parseInt(card.dataset.id);
+
+            card.addEventListener('click', () => {
+                const clip = this.clips.find(c => c.id === clipId);
+                if (clip) this.openPreview(clip);
+              });
+        
 
             card.querySelectorAll('[data-action]').forEach(btn => {
                 btn.addEventListener('click', (e) => {

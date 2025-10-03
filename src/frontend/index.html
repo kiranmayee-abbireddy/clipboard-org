@@ -202,6 +202,25 @@
             </div>
         </div>
     </div>
+    <div id="previewModal" class="view-modal">
+        <div class="view-modal-content modal-large">
+          <div class="view-modal-header">
+            <h2 id="previewTitle">Clip Preview</h2>
+            <button id="previewCloseBtn" class="close-btn">&times;</button>
+          </div>
+          <div class="view-modal-body">
+            <pre id="previewContent" class="clip-preview"></pre>
+            <textarea id="previewEditContent" class="clip-edit" style="display:none; width: 100%; height: 300px; font-family: monospace;"></textarea>
+          </div>
+          <div class="view-modal-footer">
+            <button id="previewCopyBtn" class="primary-btn">Copy to Clipboard</button>
+            <button id="previewEditBtn" class="secondary-btn">Edit</button> <!-- optional -->
+            <button id="previewSaveBtn" class="primary-btn" style="display:none;">Save</button>
+            <button id="previewCancelBtn" class="secondary-btn" style="display:none;">Cancel</button>
+          </div>
+        </div>
+      </div>
+      
 
     <script src="js/themes.js"></script>
     <script src="js/app.js"></script>

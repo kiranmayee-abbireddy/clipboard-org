@@ -514,3 +514,44 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--text-secondary);
 }
+
+.view-modal {
+    display: none; /* hidden by default */
+    position: fixed;
+    z-index: 10000;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+  }
+  
+  .view-modal-content {
+    background-color: var(--bg-primary);
+    margin: 10% auto;
+    padding: 1.5rem;
+    border-radius: 12px;
+    max-width: 600px;
+    box-shadow: var(--shadow);
+    color: var(--text-primary);
+  }
+  
+  .view-modal-header, .view-modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .view-modal-close-btn {
+    font-size: 1.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .clip-preview {
+    white-space: pre-wrap;
+    font-family: monospace;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  
