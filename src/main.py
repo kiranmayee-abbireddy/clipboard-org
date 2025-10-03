@@ -39,12 +39,7 @@ class ClipboardOrganizer:
         )
         
         # Start clipboard service in background
-        def initialize_backend():
-            # Give PyWebView time to initialize
-            time.sleep(1)
-            self.api.initialize_clipboard_service()
-        
-        threading.Thread(target=initialize_backend, daemon=True).start()
+        self.api.initialize_clipboard_service()
         
         # Start PyWebView (blocking call)
         webview.start(debug=True)  # Set debug=False to reduce console output

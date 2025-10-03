@@ -31,14 +31,12 @@ class ClipboardAPI:
         self.current_style = self._database.get_setting('style', 'Sunrise')
 
     def initialize_clipboard_service(self):
-        """Initialize clipboard monitoring service"""
         if not self._clipboard_service:
-            self._clipboard_service = ClipboardService(
-                self._categorizer, self._database, self._crypto_handler
-            )
+            self._clipboard_service = ClipboardService(self._categorizer, self._database, self._crypto_handler)
             self._clipboard_service.load_settings()
-            self._clipboard_service.start_monitoring()
+            self._clipboard_service.start_monitoring()  # Called on main thread
         return True
+
 
     # ============= Clip Operations =============
 
