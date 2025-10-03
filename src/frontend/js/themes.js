@@ -138,28 +138,38 @@ class ThemeManager {
         }
     }
 
+    async waitForAPI() {
+        while (!(window.pywebview && window.pywebview.api)) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+    }
+
     async loadSavedTheme() {
-        if (window.pywebview && window.pywebview.api) {
-            try {
-                const settings = await window.pywebview.api.get_theme_settings();
-                const themeSettings = JSON.parse(settings);
-                
-                this.currentMode = themeSettings.mode || 'light';
-                this.currentTheme = themeSettings.style || 'sunrise';
+        console.log("Loading saved theme...");
+        await this.waitForAPI();
+        
+        try {
+            console.log("Loading second saved theme...");
+            const settings = await window.pywebview.api.get_theme_settings();
+            const themeSettings = JSON.parse(settings);
+            console.log(themeSettings);
+            
+            this.currentMode = themeSettings.mode || 'light';
+            this.currentTheme = themeSettings.style || 'sunrise';
 
-                // Update UI
-                document.querySelectorAll('.mode-btn').forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.mode === this.currentMode);
-                });
+            // Update UI
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === this.currentMode);
+            });
 
-                this.loadThemeGrid();
-                this.applyTheme(this.currentMode, this.currentTheme);
-            } catch (error) {
-                console.error('Failed to load theme settings:', error);
-            }
+            this.loadThemeGrid();
+            this.applyTheme(this.currentMode, this.currentTheme);
+        } catch (error) {
+            console.error('Failed to load theme settings:', error);
         }
     }
 }
+
 
 // Initialize theme manager when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {

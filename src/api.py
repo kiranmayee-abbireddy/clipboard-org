@@ -36,6 +36,13 @@ class ClipboardAPI:
             self._clipboard_service.load_settings()
             self._clipboard_service.start_monitoring()  # Called on main thread
         return True
+    def set_theme(self, mode: str, style: str) -> bool:
+        self.current_theme = mode
+        self.current_style = style
+        self._database.set_setting('theme', mode)
+        self._database.set_setting('style', style)
+        return True
+
 
 
     # ============= Clip Operations =============
