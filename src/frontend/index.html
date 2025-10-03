@@ -77,6 +77,36 @@
                 <h3>No clips yet</h3>
                 <p>Start copying text and it will appear here automatically</p>
             </div>
+            <section class="manual-add-section">
+                <h3>Add Snippet Manually</h3>
+                <textarea id="manualSnippetInput" rows="4" placeholder="Paste or type snippet here..."></textarea>
+                <select id="manualCategorySelect" aria-label="Select category">
+                    <option value="text">📝 Text</option>
+                    <option value="url">🔗 URL</option>
+                    <option value="email">📧 Email</option>
+                    <option value="phone">📞 Phone Number</option>
+                    <option value="password">🔒 Password</option>
+                    <option value="code">💻 Code Snippet</option>
+                </select>
+                <button id="manualAddBtn" class="primary-btn">Add Snippet</button>
+            </section>
+            <style>
+            .manual-add-section {
+                margin-bottom: 2rem;
+            }
+            #manualSnippetInput {
+                width: 100%;
+                padding: 0.75rem;
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius);
+                margin-bottom: 0.5rem;
+                font-family: monospace;
+            }
+            #manualCategorySelect {
+                margin-bottom: 0.5rem;
+            }
+            </style>
+            
         </main>
     </div>
 

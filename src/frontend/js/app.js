@@ -12,7 +12,9 @@ class ClipboardApp {
     }
 
     async init() {
+        console.log('Waiting for pywebview API...');
         await this.waitForPyWebView();
+        console.log('pywebview API available:', window.pywebview.api);
         await this.loadCategoryInfo();
         await this.loadClips();
         await this.loadSettings();
@@ -333,6 +335,32 @@ class ClipboardApp {
             const data = await window.pywebview.api.export_clips();
             this.downloadFile('clipboard_export.json', data);
             this.showNotification('📤 Clips exported!');
+        });
+
+        // Manual snippet add
+        const manualAddBtn = document.getElementById('manualAddBtn');
+        manualAddBtn.addEventListener('click', async () => {
+            const content = document.getElementById('manualSnippetInput').value.trim();
+            if (!content) {
+                alert('Please enter a snippet to add.');
+                return;
+            }
+            const category = document.getElementById('manualCategorySelect').value;
+
+            try {
+                const success = await window.pywebview.api.manual_add_clip(content, category);
+                if (success) {
+                    this.showNotification('✅ Snippet added!');
+                    document.getElementById('manualSnippetInput').value = '';
+                    if (this.currentCategory === 'all' || this.currentCategory === category) {
+                        await this.loadClips(this.currentCategory);
+                    }
+                } else {
+                    alert('Failed to add snippet.');
+                }
+            } catch (error) {
+                console.error('Error adding snippet:', error);
+            }
         });
     }
 

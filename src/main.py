@@ -27,6 +27,7 @@ class ClipboardOrganizer:
         frontend_path = Path(__file__).parent / 'frontend' / 'index.html'
         
         # Create PyWebView window
+        print("Exposed API methods:", dir(self.api))
         self.window = webview.create_window(
             'Clipboard Organizer',
             frontend_path.as_uri(),
@@ -46,7 +47,7 @@ class ClipboardOrganizer:
         threading.Thread(target=initialize_backend, daemon=True).start()
         
         # Start PyWebView (blocking call)
-        webview.start(debug=False)  # Set debug=False to reduce console output
+        webview.start(debug=True)  # Set debug=False to reduce console output
 
 def main():
     """Application entry point"""
