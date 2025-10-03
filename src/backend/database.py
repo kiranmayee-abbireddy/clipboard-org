@@ -4,9 +4,16 @@ import json
 from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Optional
+import os
 
+def get_app_data_path():
+    # Get local app data folder for the current user
+    base_dir = os.getenv('LOCALAPPDATA')
+    app_dir = os.path.join(base_dir, "ClipboardOrganizer")
+    os.makedirs(app_dir, exist_ok=True)
+    return os.path.join(app_dir, "clipboard_data.db")
 class ClipboardDatabase:
-    def __init__(self, db_path: str = "clipboard_data.db"):
+    def __init__(self, db_path: str = get_app_data_path()):
         self.db_path = db_path
         self.connection = None
         self.init_database()

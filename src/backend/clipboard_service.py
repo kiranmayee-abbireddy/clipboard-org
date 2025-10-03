@@ -81,6 +81,7 @@ class ClipboardService(QObject):
             except Exception:
                 clip_to_store = clip
 
+
         self.database.add_clip(clip_to_store, category, encrypted_data)
 
         self.clip_changed.emit(clip_to_store, category)
@@ -123,3 +124,95 @@ class ClipboardService(QObject):
             except json.JSONDecodeError:
                 pass  # ignore invalid JSON, keep default settings
 
+import threading
+import time
+import win32clipboard
+import logging
+import os
+
+
+from backend.database import ClipboardDatabase
+from backend.categorizer import ContentCategorizer
+def get_app_data_path():
+    # Get local app data folder for the current user
+    base_dir = os.getenv('LOCALAPPDATA')
+    app_dir = os.path.join(base_dir, "ClipboardOrganizer")
+    os.makedirs(app_dir, exist_ok=True)
+    return os.path.join(app_dir, "clipboard_data.db")
+
+class ClipboardPoller:
+    def __init__(self, categorizer, interval=1.0):
+        self.categorizer = categorizer
+        self.database = ClipboardDatabase(get_app_data_path())
+        self.interval = interval  # seconds
+        self.last_clip = None
+        self.running = False
+
+        # Configure logging — adjust as needed to your app's logging setup
+        logging.basicConfig(
+            filename='clipboard_monitor.log',  # Use absolute path if needed
+            level=logging.INFO,
+            format='%(asctime)s %(levelname)s:%(message)s',
+            encoding='utf-8'
+        )
+
+        logging.info("ClipboardPoller initialized.")
+
+    def poll_clipboard(self):
+        try:
+            win32clipboard.OpenClipboard()
+            clip = win32clipboard.GetClipboardData(win32clipboard.CF_UNICODETEXT)
+            logging.debug(f"Read clipboard content length: {len(clip)}") if clip else logging.debug("Clipboard empty or unavailable.")
+        except Exception as e:
+            logging.error(f"Error reading clipboard: {e}")
+            clip = None
+        finally:
+            try:
+                win32clipboard.CloseClipboard()
+            except Exception as close_e:
+                logging.error(f"Error closing clipboard: {close_e}")
+
+        clip = clip.strip() if clip else ""
+
+        if clip and clip != self.last_clip:
+            self.last_clip = clip
+            category = self.categorizer.categorize(clip)
+            logging.info(f"New clipboard item detected. Category: {category}, Content Preview: {clip[:30]!r}")
+
+            try:
+                if self.database.check_duplicate(clip):
+                    logging.info("Duplicate clip detected, skipping insertion.")
+                    full_path = os.path.abspath(self.database.db_path)
+                    print(f"Using database file: {full_path}")
+                else:
+                    self.database.add_clip(clip, category)
+                    full_path = os.path.abspath(self.database.db_path)
+                    logging.info("Clip successfully saved to database.")
+                    print(f"Using database file: {full_path}")
+            except Exception as db_e:
+                logging.error(f"Error saving clip to database: {db_e}")
+                full_path = os.path.abspath(self.database.db_path)
+                print(f"Using database file: {full_path}")
+
+    def _run(self):
+        logging.info("Clipboard polling thread started.")
+        while self.running:
+            self.poll_clipboard()
+            time.sleep(self.interval)
+        logging.info("Clipboard polling thread stopped.")
+
+    def start(self):
+        if not self.running:
+            logging.info("Starting clipboard poller...")
+            self.running = True
+            self.thread = threading.Thread(target=self._run, daemon=True)
+            self.thread.start()
+        else:
+            logging.warning("Clipboard poller already running.")
+
+    def stop(self):
+        if self.running:
+            logging.info("Stopping clipboard poller...")
+            self.running = False
+            self.thread.join()
+            logging.info("Clipboard poller stopped.")

@@ -21,7 +21,7 @@ class CryptoHandler:
         salt = b'clipboard_organizer_salt_v1'  # In production, use random salt
         
         # Derive key from passkey
-        kdf = PBKDF2(
+        kdf = PBKDF2HMAC(
             algorithm=hashes.SHA256(),
             length=32,
             salt=salt,

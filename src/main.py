@@ -5,6 +5,7 @@ import threading
 import time
 from pathlib import Path
 from api import ClipboardAPI
+from background import create_startup_task
 
 # Import QApplication at module level
 from PyQt6.QtWidgets import QApplication
@@ -46,6 +47,7 @@ class ClipboardOrganizer:
 
 def main():
     """Application entry point"""
+    create_startup_task()
     app = ClipboardOrganizer()
     app.start()
 
