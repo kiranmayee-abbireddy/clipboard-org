@@ -4,13 +4,20 @@ import sys
 import threading
 import time
 from pathlib import Path
-from PyQt6.QtWidgets import QApplication
 from api import ClipboardAPI
+
+# Import QApplication at module level
+from PyQt6.QtWidgets import QApplication
 
 class ClipboardOrganizer:
     """Main application class"""
     
     def __init__(self):
+        # Initialize QApplication in main thread BEFORE anything else
+        self.qt_app = QApplication.instance()
+        if not self.qt_app:
+            self.qt_app = QApplication(sys.argv)
+        
         self.api = ClipboardAPI()
         self.window = None
     
@@ -30,7 +37,7 @@ class ClipboardOrganizer:
             min_size=(800, 600)
         )
         
-        # Start PyQt clipboard service in background
+        # Start clipboard service in background
         def initialize_backend():
             # Give PyWebView time to initialize
             time.sleep(1)
@@ -39,7 +46,7 @@ class ClipboardOrganizer:
         threading.Thread(target=initialize_backend, daemon=True).start()
         
         # Start PyWebView (blocking call)
-        webview.start(debug=True)
+        webview.start(debug=False)  # Set debug=False to reduce console output
 
 def main():
     """Application entry point"""
