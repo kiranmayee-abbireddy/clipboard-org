@@ -5,6 +5,7 @@ from PyQt6.QtCore import QObject, pyqtSignal, QTimer
 from PyQt6.QtGui import QClipboard
 from typing import Callable, Optional
 import threading
+import time
 
 class ClipboardService(QObject):
     """PyQt-based clipboard monitoring service"""
@@ -46,7 +47,7 @@ class ClipboardService(QObject):
         if not self.is_monitoring:
             return
         
-        content = self.clipboard.text()
+        content = self.clipboard.text().strip()
         
         # Ignore empty or duplicate content
         if not content or content == self.last_content:
@@ -75,9 +76,7 @@ class ClipboardService(QObject):
                 pass  # If encryption fails, store as plain text
         
         # Store in database
-        clip_id = self.database.add_clip(content, category, encrypted_data)
-        
-        # Emit signal for UI update
+        self.database.add_clip(content, category, encrypted_data)
         self.clip_changed.emit(content, category)
     
     def start_monitoring(self):
