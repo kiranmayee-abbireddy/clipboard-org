@@ -564,3 +564,22 @@ class ClipboardApp {
 document.addEventListener('DOMContentLoaded', () => {
     window.clipboardApp = new ClipboardApp();
 });
+
+// Export all clips
+document.getElementById('exportBtn').onclick = async function() {
+    try {
+        const filePath = await window.pywebview.api.export_clips_to_file();
+        console.log("Exported file path:", filePath);
+        alert('Export completed! File saved at:\n' + filePath);
+    } catch (error) {
+        alert('Export failed: ' + error.message);
+    }
+};
+
+
+document.getElementById('cleanupBtn').onclick = async function() {
+    if (window.pywebview) {
+        await window.pywebview.api.cleanup_old_clips();
+        // Optionally: refresh UI
+    }
+};

@@ -5,6 +5,7 @@ from backend.clipboard_service import ClipboardService
 from backend.database import ClipboardDatabase
 from backend.categorizer import ContentCategorizer
 from backend.crypto_handler import CryptoHandler
+from datetime import datetime, timedelta
 
 
 class ClipboardAPI:
@@ -172,6 +173,26 @@ class ClipboardAPI:
     def export_clips(self) -> str:
         clips = self._database.get_all_clips(limit=10000)
         return json.dumps(clips, indent=2)
+
+    from pathlib import Path
+    import json
+
+    def export_clips_to_file(self):
+        clips = self._database.get_all_clips(limit=10000)
+        data_str = json.dumps(clips, indent=2)
+
+        export_path = self.Path.home() / "Desktop" / "clipbox_export.json"
+        with open(export_path, 'w', encoding='utf-8') as f:
+            f.write(data_str)
+
+        return str(export_path)
+
+
+    def import_clips(self, data):
+        clips = json.loads(data)
+        for clip in clips:
+            self._database.write_clip(clip)  # customize for your schema
+        return {'status': 'success'}
 
     def manual_add_clip(self, content: str, category: str) -> bool:
         if not content.strip():

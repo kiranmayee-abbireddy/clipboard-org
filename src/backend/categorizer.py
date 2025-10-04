@@ -52,15 +52,16 @@ class ContentCategorizer:
         if ContentCategorizer.PHONE_PATTERN.search(content):
             return 'phone'
         
-        # Check for password indicators
-        for indicator in ContentCategorizer.PASSWORD_INDICATORS:
-            if indicator in content_lower:
-                return 'password'
         
         # Check if it's code (at least 2 code patterns match)
         code_matches = sum(1 for pattern in ContentCategorizer.CODE_PATTERNS if pattern.search(content))
         if code_matches >= 2 or (len(content) > 50 and code_matches >= 1):
             return 'code'
+
+        # Check for password indicators
+        for indicator in ContentCategorizer.PASSWORD_INDICATORS:
+            if indicator in content_lower and len(content) <= 20:
+                return 'password'
         
         # Default to text
         return 'text'

@@ -193,3 +193,27 @@ class ClipboardDatabase:
             print(f"Database error updating clip: {e}")
             return False
 
+    def write_clip(self, clip: dict) -> int:
+        """
+        Insert a clip from an imported dictionary.
+        Expects keys: content, category, timestamp, is_pinned, is_favorite, encrypted_data, is_encrypted.
+        Missing keys default as appropriate.
+        """
+        cursor = self.connection.cursor()
+        cursor.execute('''
+            INSERT INTO clips 
+            (content, category, timestamp, is_pinned, is_favorite, encrypted_data, is_encrypted)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            clip.get('content', ''),
+            clip.get('category', 'text'),
+            clip.get('timestamp', None),  # will use current if None
+            clip.get('is_pinned', 0),
+            clip.get('is_favorite', 0),
+            clip.get('encrypted_data', None),
+            clip.get('is_encrypted', 0)
+        ))
+        self.connection.commit()
+        return cursor.lastrowid
+
+
