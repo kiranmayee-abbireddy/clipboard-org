@@ -177,15 +177,16 @@ body {
 }
 
 .clip-card {
-    background: var(--bg-primary);
-    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 220px; /* fixed height or min-height */
+    padding: 1rem;
     border-radius: var(--radius);
     box-shadow: var(--shadow);
-    transition: var(--transition);
+    background: var(--bg-primary);
     cursor: pointer;
-    position: relative;
-    overflow: hidden;
-}
+  }
 
 .clip-card:hover {
     transform: translateY(-4px);
@@ -240,15 +241,14 @@ body {
 }
 
 .clip-content {
-    color: var(--text-primary);
-    font-size: 0.95rem;
-    line-height: 1.5;
-    max-height: 150px;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow-y: auto;
+    flex-grow: 1;
+    margin-bottom: 1rem;
     white-space: pre-wrap;
     word-break: break-word;
-}
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
 
 .clip-content.masked {
     filter: blur(4px);
@@ -256,13 +256,15 @@ body {
 }
 
 .clip-footer {
-    margin-top: 1rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid var(--border-color);
+    flex-shrink: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
+    border-top: 1px solid var(--border-color);
+    padding-top: 0.75rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
 
 .clip-time {
     font-size: 0.8rem;

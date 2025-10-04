@@ -252,9 +252,7 @@ class ClipboardApp {
                         <button class="clip-action-btn" data-action="delete" title="Delete">🗑️</button>
                     </div>
                 </div>
-                <div class="clip-content ${isMasked ? 'masked' : ''}">
-                    ${this.escapeHtml(truncatedContent)}
-                </div>
+                <div class="clip-content ${isMasked ? 'masked' : ''}">${this.escapeHtml(truncatedContent)}</div>
                 ${isMasked ? `
                     <div style="margin-top: 0.5rem;">
                         <button class="clip-action-btn" data-action="unlock" style="opacity: 1;">
@@ -275,13 +273,19 @@ class ClipboardApp {
     attachClipEventListeners() {
         document.querySelectorAll('.clip-card').forEach(card => {
             const clipId = parseInt(card.dataset.id);
-
-            card.addEventListener('click', () => {
-                const clip = this.clips.find(c => c.id === clipId);
-                if (clip) this.openPreview(clip);
-              });
+            const clip = this.clips.find(c => c.id === clipId);
         
-
+            card.addEventListener('click', (event) => {
+                if (clip && clip.category === 'password' && this.passwordLocked) {
+                    // Check if click target is the unlock button
+                    if (!event.target.closest('[data-action="unlock"]')) {
+                        // Ignore clicks outside the unlock button - do not open preview
+                        return;
+                    }
+                }
+                if (clip) this.openPreview(clip);
+            });
+    
             card.querySelectorAll('[data-action]').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -290,6 +294,7 @@ class ClipboardApp {
             });
         });
     }
+    
 
     // ============= Actions =============
 
@@ -604,3 +609,9 @@ document.getElementById('cleanupBtn').onclick = async function() {
         // Optionally: refresh UI
     }
 };
+const unlockModal = document.getElementById('unlockModal');
+const unlockCloseBtn = document.getElementById('unlockCloseBtn');
+
+unlockCloseBtn.addEventListener('click', () => {
+  unlockModal.classList.remove('active');
+});
