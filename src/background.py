@@ -6,7 +6,9 @@ def create_startup_task():
     task_name = "ClipboardMonitorBackground"
     python_exe = sys.executable
     script_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "clipboard_monitor.py"))
-    cmd = f'"{python_exe}" "{script_path}"'
+    pythonw_exe = python_exe.replace('python.exe', 'pythonw.exe')
+    cmd = f'"{pythonw_exe}" "{script_path}"'
+
     print(cmd)
 
     # Create or update the scheduled task to run at user logon
