@@ -231,7 +231,7 @@ class ClipboardApp {
             ? clip.content.substring(0, 200) + '...' 
             : clip.content;
 
-        const timeAgo = this.getTimeAgo(clip.timestamp);
+        const timeAgo = this.formatTimestampIST(clip.timestamp);
 
         return `
             <div class="clip-card" data-id="${clip.id}" style="--category-color: ${info.color}">
@@ -507,16 +507,37 @@ class ClipboardApp {
         }, 2000);
     }
 
-    getTimeAgo(timestamp) {
+    getTimeAgo(utcTimestamp) {
+        // Parse the UTC timestamp, add +5:30 hours for IST
+        const utcDate = new Date(utcTimestamp + "Z");
+        const istOffsetMs = 5.5 * 60 * 60 * 1000;
+        const istDate = new Date(utcDate.getTime() + istOffsetMs);
         const now = new Date();
-        const time = new Date(timestamp);
-        const seconds = Math.floor((now - time) / 1000);
-
-        if (seconds < 60) return 'Just now';
-        if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-        if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-        return `${Math.floor(seconds / 86400)}d ago`;
+        const secondsAgo = Math.floor((now - istDate) / 1000);
+      
+        if (secondsAgo < 60) return 'Just now';
+        if (secondsAgo < 3600) return `${Math.floor(secondsAgo / 60)}m ago`;
+        if (secondsAgo < 86400) return `${Math.floor(secondsAgo / 3600)}h ago`;
+        return `${Math.floor(secondsAgo / 86400)}d ago`;
     }
+    formatTimestampIST(isoTimestamp) {
+        // Parse as local date (no manual offset)
+        const utcDate = new Date(isoTimestamp + 'Z');
+  
+        // Format to string in Asia/Kolkata timezone (IST)
+        return utcDate.toLocaleString('en-IN', {
+            timeZone: 'Asia/Kolkata',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        });
+    }
+    
+      
 
     escapeHtml(text) {
         const div = document.createElement('div');
