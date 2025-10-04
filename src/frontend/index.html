@@ -77,19 +77,19 @@
                 <h3>No clips yet</h3>
                 <p>Start copying text and it will appear here automatically</p>
             </div>
-            <section class="manual-add-section">
-                <h3>Add Snippet Manually</h3>
-                <textarea id="manualSnippetInput" rows="4" placeholder="Paste or type snippet here..."></textarea>
-                <select id="manualCategorySelect" class ="dropdown-menu"aria-label="Select category">
-                    <option  class ="dropdown-item" value="text">📝 Text</option>
-                    <option  class ="dropdown-item" value="url">🔗 URL</option>
-                    <option  class ="dropdown-item" value="email">📧 Email</option>
-                    <option  class ="dropdown-item" value="phone">📞 Phone Number</option>
-                    <option  class ="dropdown-item" value="password">🔒 Password</option>
-                    <option  class ="dropdown-item" value="code">💻 Code Snippet</option>
+            <div id="manualSnippetFloating" class="manual-snippet-floating">
+                <input type="text" id="manualSnippetInput" placeholder="Paste or type snippet here..." autocomplete="off" />
+                <select id="manualCategorySelect" class="dropdown-menu" aria-label="Select category">
+                  <option value="text" selected>📝 Text</option>
+                  <option value="url">🔗 URL</option>
+                  <option value="email">📧 Email</option>
+                  <option value="phone">📞 Phone Number</option>
+                  <option value="password">🔒 Password</option>
+                  <option value="code">💻 Code Snippet</option>
                 </select>
-                <button id="manualAddBtn" class="primary-btn">Add Snippet</button>
-            </section>
+                <button id="manualAddBtn" class="primary-btn" title="Add Snippet">＋</button>
+              </div>
+              
             <style>
             .manual-add-section {
                 margin-bottom: 2rem;
