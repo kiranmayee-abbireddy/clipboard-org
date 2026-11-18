@@ -1,115 +1,86 @@
 # src/main.py
-import webview
 import sys
-import threading
-import time
+import os
+import argparse
 from pathlib import Path
-from api import ClipboardAPI
-from background import create_startup_task
+import webview
 
-# Import QApplication at module level
-from PyQt6.QtWidgets import QApplication
+from api import ClipboardAPI
+
+def get_base_path() -> Path:
+    """Get root directory for application resources, handling PyInstaller packaging"""
+    if getattr(sys, 'frozen', False):
+        return Path(sys._MEIPASS)
+    return Path(__file__).resolve().parent
 
 class ClipboardOrganizer:
-    """Main application class"""
-    
-    def __init__(self):
-        # Initialize QApplication in main thread BEFORE anything else
-        self.qt_app = QApplication.instance()
-        if not self.qt_app:
-            self.qt_app = QApplication(sys.argv)
-        
+    """Main ClipBox desktop application controller"""
+
+    def __init__(self, debug: bool = False):
+        self.debug = debug
         self.api = ClipboardAPI()
         self.window = None
-    
+
+    def on_closed(self):
+        """Cleanup handler when the window is closed"""
+        if self.api:
+            self.api.shutdown()
+
     def start(self):
-        """Start the application"""
-        # Get frontend path
-        import sys
-        import os
-        from pathlib import Path
-
-        def get_base_path():
-            if getattr(sys, 'frozen', False):
-                # Running inside PyInstaller bundle
-                return Path(sys._MEIPASS)
-            else:
-                # Running in normal Python environment
-                return Path(__file__).parent
-
+        """Start the PyWebView desktop application"""
         base_path = get_base_path()
-
-        # Construct path to frontend/index.html reliably
         frontend_path = base_path / 'frontend' / 'index.html'
+
+        if not frontend_path.exists():
+            # Fallback check for alternate dev locations
+            alt_path = Path(__file__).resolve().parent.parent / 'src' / 'frontend' / 'index.html'
+            if alt_path.exists():
+                frontend_path = alt_path
+
         frontend_url = frontend_path.as_uri()
-        
-        # Create PyWebView window
-        print("Exposed API methods:", dir(self.api))
-        self.window = webview.create_window(
-            'Clip Box',
-            frontend_url,
-            js_api=self.api,
-            width=1000,
-            height=700,
-            resizable=True,
-            min_size=(800, 600)
-        )
-        
-        # Start clipboard service in background
+
+        # Initialize background clipboard capture engine
         self.api.initialize_clipboard_service()
-        
-        # Start PyWebView (blocking call)
-        webview.start(debug=True)  # Set debug=False to reduce console output
 
-import os
-import sys
-import ctypes
-import subprocess
+        # Locate window icon if present
+        icon_path = None
+        for candidate in [base_path / 'clipbox.ico', Path(__file__).resolve().parent.parent / 'clipbox.ico']:
+            if candidate.exists():
+                icon_path = str(candidate)
+                break
 
-def get_pythonw_executable():
-    python_exe = sys.executable
-    if python_exe.endswith("python.exe"):
-        return python_exe.replace("python.exe", "pythonw.exe")
-    else:
-        # Fallback for non-standard naming
-        return python_exe + "w"
+        # Create GUI window
+        self.window = webview.create_window(
+            title='ClipBox',
+            url=frontend_url,
+            js_api=self.api,
+            width=1080,
+            height=720,
+            resizable=True,
+            min_size=(750, 500),
+            text_select=True,
+            zoomable=True
+        )
 
-def is_admin():
-    try:
-        return ctypes.windll.shell32.IsUserAnAdmin() != 0
-    except Exception:
-        return False
+        # Wire closing event
+        self.window.events.closed += self.on_closed
 
-def task_exists(task_name):
-    result = subprocess.run(
-        ["schtasks", "/Query", "/TN", task_name],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        shell=True
-    )
-    return result.returncode == 0
+        # Start PyWebView loop (blocking)
+        webview.start(debug=self.debug)
 
-def run_as_admin():
-    script = sys.argv[0]
-    params = ' '.join([f'"{arg}"' for arg in sys.argv[1:]])
-    ctypes.windll.shell32.ShellExecuteW(
-        None, "runas", sys.executable, f'"{script}" {params}', None, 1)
-    sys.exit(0)
-
-def ensure_scheduled_task(task_name):
-    if not task_exists(task_name):
-        if not is_admin():
-            print("Elevating to admin to create background task...")
-            run_as_admin()
-        # Now create the task with your code (must be admin here)
-        create_startup_task()
-    else:
-        print(f"Scheduled task '{task_name}' already exists, no need for admin.")
 def main():
-    """Application entry point"""
-    ensure_scheduled_task("ClipboardMonitorBackground")
-    app = ClipboardOrganizer()
+    """Application entry point with optional CLI flags"""
+    parser = argparse.ArgumentParser(description="ClipBox - Aesthetic Clipboard Manager")
+    parser.add_argument('--debug', action='store_true', help="Enable developer tools and webview debug logging")
+    parser.add_argument('--headless', action='store_true', help="Run clipboard monitor in background without GUI")
+    args = parser.parse_args()
+
+    if args.headless:
+        from clipboard_monitor import main as run_headless
+        run_headless()
+        return
+
+    app = ClipboardOrganizer(debug=args.debug)
     app.start()
 
 if __name__ == '__main__':

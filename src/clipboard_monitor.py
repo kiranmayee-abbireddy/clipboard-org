@@ -1,36 +1,48 @@
+# src/clipboard_monitor.py
 import signal
 import sys
 import os
+import time
+import logging
+
 from backend.database import ClipboardDatabase
 from backend.categorizer import ContentCategorizer
-from backend.clipboard_service import ClipboardPoller
-import time
-
+from backend.clipboard_service import ClipboardService
 
 def main():
+    """Headless CLI clipboard monitor runner"""
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s [%(levelname)s] %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+    
     db = ClipboardDatabase()
     categorizer = ContentCategorizer()
-    poller = ClipboardPoller(categorizer, interval=1.0)
+    service = ClipboardService(categorizer, db, interval=0.5)
 
-    poller.start()
-    print("Clipboard monitor running in background (non-Qt)...")
+    def on_clip(content: str, category: str):
+        preview = (content[:40] + '...') if len(content) > 40 else content
+        logging.info(f"Captured [{category.upper()}]: {preview!r}")
 
-    def signal_handler(sig, frame):
-        print("Shutting down clipboard monitor...")
-        poller.stop()
+    service.add_listener(on_clip)
+    service.start_monitoring()
+    logging.info("ClipBox background monitor started. Press Ctrl+C to exit.")
+
+    def shutdown(sig, frame):
+        logging.info("Shutting down monitor...")
+        service.stop_monitoring()
         db.close()
         sys.exit(0)
 
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, shutdown)
+    signal.signal(signal.SIGTERM, shutdown)
 
     try:
         while True:
-            print("Clipboard monitor running in background (non-Qt)...")
-            time.sleep(1)  # wait indefinitely
+            time.sleep(1)
     except KeyboardInterrupt:
-        signal_handler(None, None)
-
+        shutdown(None, None)
 
 if __name__ == "__main__":
     main()

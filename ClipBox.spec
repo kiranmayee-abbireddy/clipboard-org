@@ -1,19 +1,41 @@
 # -*- mode: python ; coding: utf-8 -*-
+import sys
+from pathlib import Path
 
+block_cipher = None
 
 a = Analysis(
-    ['src\\main.py'],
-    pathex=[],
+    ['src/main.py'],
+    pathex=['src'],
     binaries=[],
-    datas=[('src/frontend', 'frontend')],
-    hiddenimports=[],
+    datas=[
+        ('src/frontend', 'frontend'),
+        ('clipbox.ico', '.'),
+    ],
+    hiddenimports=[
+        'win32clipboard',
+        'win32con',
+        'cryptography',
+        'cryptography.fernet',
+        'webview',
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=[
+        'PyQt6',
+        'PySide6',
+        'matplotlib',
+        'scipy',
+        'torch',
+        'pandas',
+        'tkinter',
+        'unittest',
+    ],
     noarchive=False,
 )
-pyz = PYZ(a.pure)
+
+pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
 exe = EXE(
     pyz,
@@ -34,5 +56,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['clipbox.ico'],
+    icon='clipbox.ico',
 )

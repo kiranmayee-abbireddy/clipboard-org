@@ -3,115 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clip Box</title>
+    <title>ClipBox - Aesthetic Clipboard Manager</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/themes.css">
 </head>
 <body class="theme-light theme-sunrise">
     
-    <!-- Header -->
+    <!-- Application Header -->
     <header class="app-header">
         <div class="header-left">
-            <h1>📋 Clip Box</h1>
+            <span class="logo-icon">📋</span>
+            <h1>ClipBox</h1>
+            <span class="version-badge">v1.2</span>
         </div>
         <div class="header-right">
-            <button id="settingsBtn" class="icon-btn" title="Settings">⚙️</button>
-            <button id="themeToggle" class="icon-btn" title="Toggle Theme">🌓</button>
+            <button id="statsBtn" class="icon-btn" title="Statistics (Ctrl+I)">📊</button>
+            <button id="settingsBtn" class="icon-btn" title="Settings (Ctrl+,)">⚙️</button>
+            <button id="themeToggle" class="icon-btn" title="Toggle Light/Dark Theme (Ctrl+T)">🌓</button>
         </div>
     </header>
 
-    <!-- Main Container -->
+    <!-- Main Workspace Container -->
     <div class="container">
         
-        <!-- Sidebar -->
+        <!-- Sidebar Navigation -->
         <aside class="sidebar">
             <div class="search-box">
-                <input type="text" id="searchInput" placeholder="🔍 Search clips...">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="Search clips (Ctrl+F)..." autocomplete="off" spellcheck="false">
+                <button id="searchClearBtn" class="clear-btn" title="Clear search" style="display: none;">✕</button>
             </div>
             
             <nav class="category-nav">
                 <button class="category-btn active" data-category="all">
-                    📑 All Clips
+                    <span class="cat-icon">📑</span>
+                    <span class="cat-label">All Clips</span>
                 </button>
                 <button class="category-btn" data-category="url">
-                    🔗 URLs
+                    <span class="cat-icon">🔗</span>
+                    <span class="cat-label">URLs</span>
                 </button>
                 <button class="category-btn" data-category="email">
-                    📧 Emails
+                    <span class="cat-icon">📧</span>
+                    <span class="cat-label">Emails</span>
                 </button>
                 <button class="category-btn" data-category="phone">
-                    📞 Phone Numbers
+                    <span class="cat-icon">📞</span>
+                    <span class="cat-label">Phone Numbers</span>
                 </button>
                 <button class="category-btn" data-category="password">
-                    🔒 Passwords
+                    <span class="cat-icon">🔒</span>
+                    <span class="cat-label">Passwords</span>
                 </button>
                 <button class="category-btn" data-category="code">
-                    💻 Code Snippets
+                    <span class="cat-icon">💻</span>
+                    <span class="cat-label">Code Snippets</span>
                 </button>
                 <button class="category-btn" data-category="text">
-                    📝 Text
+                    <span class="cat-icon">📝</span>
+                    <span class="cat-label">Text</span>
                 </button>
             </nav>
             
             <div class="sidebar-footer">
-                <button id="cleanupBtn" class="action-btn">🗑️ Cleanup Old</button>
-                <button id="exportBtn" class="action-btn">📤 Export</button>
+                <button id="cleanupBtn" class="action-btn" title="Clean up clips older than 30 days">🗑️ Clean Old</button>
+                <button id="exportBtn" class="action-btn" title="Export all clips to JSON file">📤 Export</button>
             </div>
         </aside>
 
-        <!-- Main Content -->
+        <!-- Main Content Area -->
         <main class="main-content">
             <div class="content-header">
-                <h2 id="contentTitle">All Clips</h2>
-                <span id="clipCount" class="clip-count">0 clips</span>
+                <div class="title-wrap">
+                    <h2 id="contentTitle">All Clips</h2>
+                    <span id="clipCount" class="clip-count">0 clips</span>
+                </div>
+                <div class="header-filters">
+                    <button id="filterPinnedBtn" class="filter-chip" title="Show only pinned clips">📌 Pinned</button>
+                    <button id="filterFavoriteBtn" class="filter-chip" title="Show only favorite clips">⭐ Favorites</button>
+                </div>
             </div>
             
-            <!-- Clips Grid -->
+            <!-- Dynamic Clips Grid -->
             <div id="clipsGrid" class="clips-grid">
-                <!-- Clips will be dynamically loaded here -->
+                <!-- Cards dynamically loaded here -->
             </div>
             
-            <!-- Empty State -->
+            <!-- Empty State Display -->
             <div id="emptyState" class="empty-state">
                 <div class="empty-icon">📋</div>
                 <h3>No clips yet</h3>
-                <p>Start copying text and it will appear here automatically</p>
+                <p>Any text you copy will automatically appear here</p>
+                <p class="empty-hint">Or paste a snippet below to add it manually</p>
             </div>
+
+            <!-- Floating Manual Add Snippet Bar -->
             <div id="manualSnippetFloating" class="manual-snippet-floating">
-                <input type="text" id="manualSnippetInput" placeholder="Paste or type snippet here..." autocomplete="off" />
+                <input type="text" id="manualSnippetInput" placeholder="Paste or type snippet... (Enter to add)" autocomplete="off">
                 <select id="manualCategorySelect" class="dropdown-menu" aria-label="Select category">
-                  <option value="text" selected>📝 Text</option>
-                  <option value="url">🔗 URL</option>
-                  <option value="email">📧 Email</option>
-                  <option value="phone">📞 Phone Number</option>
-                  <option value="password">🔒 Password</option>
-                  <option value="code">💻 Code Snippet</option>
+                    <option value="text" selected>📝 Text</option>
+                    <option value="url">🔗 URL</option>
+                    <option value="email">📧 Email</option>
+                    <option value="phone">📞 Phone</option>
+                    <option value="password">🔒 Password</option>
+                    <option value="code">💻 Code</option>
                 </select>
-                <button id="manualAddBtn" class="primary-btn" title="Add Snippet">＋</button>
-              </div>
-              
-            <style>
-            .manual-add-section {
-                margin-bottom: 2rem;
-            }
-            #manualSnippetInput {
-                width: 100%;
-                padding: 0.75rem;
-                border: 1px solid var(--border-color);
-                border-radius: var(--radius);
-                margin-bottom: 0.5rem;
-                font-family: monospace;
-            }
-            #manualCategorySelect {
-                margin-bottom: 0.5rem;
-                padding: 11px;
-                border-radius: 12px;
-            }
-            #passkeyInput{
-                padding: 10px;
-                border-radius: 12px;
-            }
-            </style>
+                <button id="manualAddBtn" class="primary-btn add-btn" title="Add snippet (Ctrl+Enter)">＋ Add</button>
+            </div>
             
         </main>
     </div>
@@ -121,22 +119,23 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>⚙️ Settings</h2>
-                <button class="close-btn">&times;</button>
+                <button class="close-btn" data-modal="settingsModal">&times;</button>
             </div>
             
             <div class="modal-body">
+                <!-- Selective Storage -->
                 <div class="settings-section">
                     <h3>Selective Storage</h3>
-                    <p>Choose which types of content to automatically save</p>
+                    <p>Choose which categories to automatically capture from your clipboard:</p>
                     
                     <div class="toggle-group">
                         <label class="toggle-item">
                             <input type="checkbox" data-category="url" checked>
-                            <span class="toggle-label">🔗 URLs</span>
+                            <span class="toggle-label">🔗 URLs & Links</span>
                         </label>
                         <label class="toggle-item">
                             <input type="checkbox" data-category="email" checked>
-                            <span class="toggle-label">📧 Emails</span>
+                            <span class="toggle-label">📧 Email Addresses</span>
                         </label>
                         <label class="toggle-item">
                             <input type="checkbox" data-category="phone" checked>
@@ -144,7 +143,7 @@
                         </label>
                         <label class="toggle-item">
                             <input type="checkbox" data-category="password" checked>
-                            <span class="toggle-label">🔒 Passwords</span>
+                            <span class="toggle-label">🔒 Passwords & Tokens</span>
                         </label>
                         <label class="toggle-item">
                             <input type="checkbox" data-category="code" checked>
@@ -152,36 +151,38 @@
                         </label>
                         <label class="toggle-item">
                             <input type="checkbox" data-category="text" checked>
-                            <span class="toggle-label">📝 Text</span>
+                            <span class="toggle-label">📝 General Text</span>
                         </label>
                     </div>
                 </div>
                 
+                <!-- Password Security -->
                 <div class="settings-section">
-                    <h3>Password Security</h3>
-                    <p>Set a passkey to encrypt and protect password clips</p>
+                    <h3>Password Encryption</h3>
+                    <p>Protect sensitive clips with AES/Fernet encryption via a master passkey</p>
                     
-                    <div id="passkeySetup">
-                        <input type="password" id="passkeyInput" placeholder="Enter passkey">
+                    <div id="passkeySetup" class="passkey-input-row">
+                        <input type="password" id="passkeyInput" placeholder="Enter new passkey (min 4 chars)">
                         <button id="setPasskeyBtn" class="primary-btn">Set Passkey</button>
                     </div>
                     
                     <div id="passkeyStatus" style="display: none;">
-                        <p>✅ Passkey is configured</p>
-                        <button id="lockPasswordsBtn" class="secondary-btn">Lock Passwords</button>
+                        <p class="status-badge-ok">🔒 Passkey encryption is configured</p>
+                        <button id="lockPasswordsBtn" class="secondary-btn">Lock Passwords Now</button>
                     </div>
                 </div>
                 
+                <!-- Theme Selection -->
                 <div class="settings-section">
-                    <h3>Theme Selection</h3>
+                    <h3>Theme Palette</h3>
                     <div class="theme-selector">
                         <div class="theme-mode-toggle">
-                            <button class="mode-btn active" data-mode="light">☀️ Light</button>
-                            <button class="mode-btn" data-mode="dark">🌙 Dark</button>
+                            <button class="mode-btn active" data-mode="light">☀️ Light Palette</button>
+                            <button class="mode-btn" data-mode="dark">🌙 Dark Palette</button>
                         </div>
                         
                         <div class="theme-grid" id="themeGrid">
-                            <!-- Themes will be loaded dynamically -->
+                            <!-- Theme swatches dynamically loaded by themes.js -->
                         </div>
                     </div>
                 </div>
@@ -193,36 +194,79 @@
     <div id="unlockModal" class="modal">
         <div class="modal-content modal-small">
             <div class="modal-header">
-                <h2>🔒 Enter Passkey</h2>
-                <button class="close-btn" id="unlockCloseBtn">&times;</button>
+                <h2>🔒 Unlock Protected Clip</h2>
+                <button class="close-btn" data-modal="unlockModal">&times;</button>
             </div>
             <div class="modal-body">
-                <input type="password" id="unlockPasskeyInput" placeholder="Enter passkey">
-                <button id="unlockBtn" class="primary-btn">Unlock</button>
-                <p id="unlockError" class="error-msg" style="display: none;">Incorrect passkey</p>
+                <p class="unlock-desc">Enter your master passkey to decrypt sensitive password clips.</p>
+                <div class="unlock-input-wrap">
+                    <input type="password" id="unlockPasskeyInput" placeholder="Enter master passkey">
+                </div>
+                <button id="unlockBtn" class="primary-btn unlock-btn">Unlock</button>
+                <p id="unlockError" class="error-msg" style="display: none;">Incorrect passkey. Please try again.</p>
             </div>
         </div>
     </div>
-    <div id="previewModal" class="view-modal">
-        <div class="view-modal-content modal-large">
-          <div class="view-modal-header">
-            <h2 id="previewTitle">Clip Preview</h2>
-            <button id="previewCloseBtn" class="close-btn">&times;</button>
-          </div>
-          <div class="view-modal-body">
-            <pre id="previewContent" class="clip-preview"></pre>
-            <textarea id="previewEditContent" class="clip-edit" style="display:none; width: 100%; height: 300px; font-family: monospace;"></textarea>
-          </div>
-          <div class="view-modal-footer">
-            <button id="previewCopyBtn" class="primary-btn">Copy to Clipboard</button>
-            <button id="previewEditBtn" class="secondary-btn">Edit</button> <!-- optional -->
-            <button id="previewSaveBtn" class="primary-btn" style="display:none;">Save</button>
-            <button id="previewCancelBtn" class="secondary-btn" style="display:none;">Cancel</button>
-          </div>
-        </div>
-      </div>
-      
 
+    <!-- Clip Preview & Edit Modal -->
+    <div id="previewModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 id="previewTitle">Clip Details</h2>
+                <button class="close-btn" data-modal="previewModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="preview-meta">
+                    <span id="previewCategoryTag" class="meta-tag">Text</span>
+                    <span id="previewTimestamp" class="meta-time">Timestamp</span>
+                    <span id="previewCharCount" class="meta-chars">0 characters</span>
+                </div>
+                <pre id="previewContent" class="clip-preview-box"></pre>
+                <textarea id="previewEditContent" class="clip-edit-box" style="display:none;"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button id="previewCopyBtn" class="primary-btn">📋 Copy to Clipboard</button>
+                <button id="previewEditBtn" class="secondary-btn">✏️ Edit</button>
+                <button id="previewSaveBtn" class="primary-btn" style="display:none;">💾 Save Changes</button>
+                <button id="previewCancelBtn" class="secondary-btn" style="display:none;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats & About Modal -->
+    <div id="statsModal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>📊 ClipBox Statistics</h2>
+                <button class="close-btn" data-modal="statsModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <span class="stat-num" id="statTotalClips">0</span>
+                        <span class="stat-lbl">Total Clips</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-num" id="statPinnedClips">0</span>
+                        <span class="stat-lbl">Pinned</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-num" id="statFavoriteClips">0</span>
+                        <span class="stat-lbl">Favorites</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-num" id="statDbSize">0 KB</span>
+                        <span class="stat-lbl">Database Size</span>
+                    </div>
+                </div>
+                <div class="stats-categories" id="statsCategories">
+                    <!-- Category stats -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
     <script src="js/themes.js"></script>
     <script src="js/app.js"></script>
 </body>

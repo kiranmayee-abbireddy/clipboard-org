@@ -1,149 +1,48 @@
-// frontend/js/app.js
+// src/frontend/js/app.js
 
 class ClipboardApp {
     constructor() {
         this.clips = [];
         this.currentCategory = 'all';
+        this.filterType = 'none'; // 'none', 'pinned', 'favorite'
         this.categoryInfo = {};
         this.searchTimeout = null;
+        this.searchQuery = '';
         this.passwordLocked = true;
-        this.setupPreviewModal();
-        
+        this.lastVersion = 0;
+        this.isEditing = false;
+        this.currentPreviewClip = null;
+
         this.init();
     }
 
     async init() {
-        console.log('Waiting for pywebview API...');
+        console.log('ClipBox initializing...');
         await this.waitForPyWebView();
-        console.log('pywebview API available:', window.pywebview.api);
         await this.loadCategoryInfo();
-        await this.loadClips();
         await this.loadSettings();
+        await this.loadClips();
         this.setupEventListeners();
-        this.startAutoRefresh();
+        this.setupKeyboardShortcuts();
+        this.startSmartPolling();
+        console.log('ClipBox initialized successfully.');
     }
 
     waitForPyWebView() {
         return new Promise((resolve) => {
-            const checkInterval = setInterval(() => {
+            if (window.pywebview && window.pywebview.api) {
+                resolve();
+                return;
+            }
+            const interval = setInterval(() => {
                 if (window.pywebview && window.pywebview.api) {
-                    clearInterval(checkInterval);
+                    clearInterval(interval);
                     resolve();
                 }
-            }, 100);
+            }, 50);
         });
     }
 
-    setupPreviewModal() {
-        this.previewModal = document.getElementById('previewModal');
-        this.previewContent = document.getElementById('previewContent');
-        this.previewEditContent = document.getElementById('previewEditContent');
-        this.previewTitle = document.getElementById('previewTitle');
-        this.previewCloseBtn = document.getElementById('previewCloseBtn');
-        this.previewCopyBtn = document.getElementById('previewCopyBtn');
-        this.previewEditBtn = document.getElementById('previewEditBtn');
-        this.previewSaveBtn = document.getElementById('previewSaveBtn');
-        this.previewCancelBtn = document.getElementById('previewCancelBtn');
-    
-        this.previewCloseBtn.addEventListener('click', () => this.closePreview());
-        this.previewModal.addEventListener('click', (e) => {
-          if (e.target === this.previewModal) this.closePreview();
-        });
-        this.previewCopyBtn.addEventListener('click', () => this.copyPreviewContent());
-        this.previewCopyBtn.addEventListener('click', () => this.copyPreviewContent());
-        this.previewEditBtn.addEventListener('click', () => this.enterEditMode());
-        this.previewCancelBtn.addEventListener('click', () => this.exitEditMode());
-        this.previewSaveBtn.addEventListener('click', () => this.saveEditedContent());
-      }
-    
-      openPreview(clip) {
-        this.currentPreviewClip = clip;
-        this.previewTitle.textContent = `Preview - ${clip.category}`;
-
-        this.previewContent.textContent = clip.content;
-        this.previewEditContent.value = clip.content;
-
-        // Show view mode, hide edit mode initially
-        this.previewContent.style.display = 'block';
-        this.previewEditContent.style.display = 'none';
-        this.previewCopyBtn.style.display = 'inline-block';
-        this.previewEditBtn.style.display = 'inline-block';
-        this.previewSaveBtn.style.display = 'none';
-        this.previewCancelBtn.style.display = 'none';
-
-        this.previewModal.style.display = 'block';
-      }
-      enterEditMode() {
-        this.previewContent.style.display = 'none';
-        this.previewEditContent.style.display = 'block';
-    
-        this.previewCopyBtn.style.display = 'none';
-        this.previewEditBtn.style.display = 'none';
-        this.previewSaveBtn.style.display = 'inline-block';
-        this.previewCancelBtn.style.display = 'inline-block';
-    
-        this.previewEditContent.focus();
-      }
-    
-      exitEditMode() {
-        this.previewContent.style.display = 'block';
-        this.previewEditContent.style.display = 'none';
-    
-        this.previewCopyBtn.style.display = 'inline-block';
-        this.previewEditBtn.style.display = 'inline-block';
-        this.previewSaveBtn.style.display = 'none';
-        this.previewCancelBtn.style.display = 'none';
-    
-        // Reset textarea content to last saved clip content
-        this.previewEditContent.value = this.currentPreviewClip.content;
-      }
-    
-      async saveEditedContent() {
-        const newContent = this.previewEditContent.value.trim();
-        if (!newContent) {
-          alert('Content cannot be empty!');
-          return;
-        }
-    
-        if (newContent === this.currentPreviewClip.content) {
-          this.exitEditMode();
-          return;
-        }
-    
-        try {
-          // Call backend API to update clip content
-          // Assuming you add an API method `update_clip_content(clipId, content)`
-          const success = await window.pywebview.api.update_clip_content(this.currentPreviewClip.id, newContent);
-          if (success) {
-            this.showNotification('✅ Clip updated!');
-            // Update local clip content and UI
-            this.currentPreviewClip.content = newContent;
-            this.previewContent.textContent = newContent;
-            this.exitEditMode();
-            // Reload clips list if desired
-            await this.loadClips(this.currentCategory);
-          } else {
-            alert('Failed to update clip.');
-          }
-        } catch (error) {
-          console.error('Update clip failed:', error);
-          alert('Error updating clip.');
-        }
-      }
-    
-      closePreview() {
-        this.previewModal.style.display = 'none';
-      }
-    
-      async copyPreviewContent() {
-        if (!this.currentPreviewClip) return;
-        try {
-          await navigator.clipboard.writeText(this.currentPreviewClip.content);
-          this.showNotification('Copied preview content to clipboard!');
-        } catch {
-          alert('Failed to copy to clipboard');
-        }
-      }
     // ============= Data Loading =============
 
     async loadCategoryInfo() {
@@ -155,53 +54,98 @@ class ClipboardApp {
         }
     }
 
-    async loadClips(category = 'all') {
-        try {
-            let clipsJson;
-            if (category === 'all') {
-                clipsJson = await window.pywebview.api.get_all_clips();
-            } else {
-                clipsJson = await window.pywebview.api.get_clips_by_category(category);
-            }
-            
-            this.clips = JSON.parse(clipsJson);
-            this.renderClips();
-        } catch (error) {
-            console.error('Failed to load clips:', error);
-        }
-    }
-
     async loadSettings() {
         try {
-            // Load category settings
             const categorySettings = await window.pywebview.api.get_category_settings();
             const settings = JSON.parse(categorySettings);
-            
-            // Update checkboxes
+
             document.querySelectorAll('.toggle-item input[type="checkbox"]').forEach(checkbox => {
                 const category = checkbox.dataset.category;
-                checkbox.checked = settings[category] || false;
+                if (category in settings) {
+                    checkbox.checked = settings[category];
+                }
             });
 
-            // Check password lock status
             this.passwordLocked = await window.pywebview.api.is_password_locked();
             const passkeySet = await window.pywebview.api.is_passkey_set();
-            
-            if (passkeySet) {
-                document.getElementById('passkeySetup').style.display = 'none';
-                document.getElementById('passkeyStatus').style.display = 'block';
+
+            const setupDiv = document.getElementById('passkeySetup');
+            const statusDiv = document.getElementById('passkeyStatus');
+            if (setupDiv && statusDiv) {
+                setupDiv.style.display = passkeySet ? 'none' : 'flex';
+                statusDiv.style.display = passkeySet ? 'block' : 'none';
             }
         } catch (error) {
             console.error('Failed to load settings:', error);
         }
     }
 
+    async loadClips(category = this.currentCategory, resetScroll = false) {
+        try {
+            let clipsJson;
+            if (this.searchQuery) {
+                clipsJson = await window.pywebview.api.search_clips(this.searchQuery);
+            } else if (category === 'all') {
+                clipsJson = await window.pywebview.api.get_all_clips();
+            } else {
+                clipsJson = await window.pywebview.api.get_clips_by_category(category);
+            }
+
+            let loadedClips = JSON.parse(clipsJson);
+
+            // Apply filter chips (Pinned or Favorites)
+            if (this.filterType === 'pinned') {
+                loadedClips = loadedClips.filter(c => c.is_pinned);
+            } else if (this.filterType === 'favorite') {
+                loadedClips = loadedClips.filter(c => c.is_favorite);
+            }
+
+            this.clips = loadedClips;
+            this.renderClips(resetScroll);
+
+            // Update version tracking
+            try {
+                this.lastVersion = await window.pywebview.api.get_clips_version();
+            } catch (e) {
+                // Ignore version check errors
+            }
+        } catch (error) {
+            console.error('Failed to load clips:', error);
+        }
+    }
+
+    // ============= Smart Zero-Overhead Polling =============
+
+    startSmartPolling() {
+        // Polls monotonic version every 750ms instead of heavy full-DOM re-renders
+        setInterval(async () => {
+            if (this.searchQuery || this.isEditing) {
+                return; // Pause auto-refresh while searching or editing
+            }
+            try {
+                if (window.pywebview && window.pywebview.api) {
+                    const currentVersion = await window.pywebview.api.get_clips_version();
+                    if (this.lastVersion !== 0 && currentVersion !== this.lastVersion) {
+                        this.lastVersion = currentVersion;
+                        await this.loadClips(this.currentCategory, false);
+                    } else if (this.lastVersion === 0) {
+                        this.lastVersion = currentVersion;
+                    }
+                }
+            } catch (e) {
+                // Silently handle polling pause
+            }
+        }, 750);
+    }
+
     // ============= Rendering =============
 
-    renderClips() {
+    renderClips(resetScroll = false) {
         const grid = document.getElementById('clipsGrid');
         const emptyState = document.getElementById('emptyState');
         const clipCount = document.getElementById('clipCount');
+
+        if (!grid || !emptyState || !clipCount) return;
 
         if (this.clips.length === 0) {
             grid.style.display = 'none';
@@ -212,57 +156,63 @@ class ClipboardApp {
 
         grid.style.display = 'grid';
         emptyState.style.display = 'none';
-        clipCount.textContent = `${this.clips.length} clip${this.clips.length !== 1 ? 's' : ''}`;
+        const suffix = this.searchQuery ? ' matching' : '';
+        clipCount.textContent = `${this.clips.length} clip${this.clips.length !== 1 ? 's' : ''}${suffix}`;
 
-        grid.innerHTML = this.clips.map(clip => this.createClipCard(clip)).join('');
-        
-        // Attach event listeners
+        grid.innerHTML = this.clips.map(clip => this.createClipCardHtml(clip)).join('');
         this.attachClipEventListeners();
+
+        if (resetScroll) {
+            document.querySelector('.main-content').scrollTop = 0;
+        }
     }
 
-    createClipCard(clip) {
-        const category = clip.category;
+    createClipCardHtml(clip) {
+        const category = clip.category || 'text';
         const info = this.categoryInfo[category] || { color: '#6B7280', icon: '📝' };
         const isPassword = category === 'password';
-        const isEncrypted = clip.is_encrypted;
         const isMasked = isPassword && this.passwordLocked;
+        const isCode = category === 'code';
 
-        const truncatedContent = clip.content.length > 200 
-            ? clip.content.substring(0, 200) + '...' 
-            : clip.content;
+        let displayContent = clip.content || '';
+        if (displayContent.length > 220) {
+            displayContent = displayContent.substring(0, 220) + '...';
+        }
 
-        const timeAgo = this.formatTimestampIST(clip.timestamp);
+        const timeDisplay = this.formatRelativeTime(clip.timestamp);
+        const fullTime = clip.timestamp ? new Date(clip.timestamp + 'Z').toLocaleString() : '';
 
         return `
-            <div class="clip-card" data-id="${clip.id}" style="--category-color: ${info.color}">
+            <div class="clip-card ${isCode ? 'is-code' : ''}" data-id="${clip.id}" style="--category-color: ${info.color}">
                 <div class="clip-header">
                     <div class="clip-category">
                         <span>${info.icon}</span>
                         <span>${category}</span>
                     </div>
                     <div class="clip-actions">
-                        ${clip.is_pinned ? 
-                            '<button class="clip-action-btn" data-action="unpin" title="Unpin">📌</button>' :
-                            '<button class="clip-action-btn" data-action="pin" title="Pin">📍</button>'
-                        }
-                        ${clip.is_favorite ? 
-                            '<button class="clip-action-btn" data-action="unfavorite" title="Unfavorite">⭐</button>' :
-                            '<button class="clip-action-btn" data-action="favorite" title="Favorite">☆</button>'
-                        }
-                        <button class="clip-action-btn" data-action="delete" title="Delete">🗑️</button>
+                        <button class="clip-action-btn" data-action="${clip.is_pinned ? 'unpin' : 'pin'}" title="${clip.is_pinned ? 'Unpin' : 'Pin'}">
+                            ${clip.is_pinned ? '📌' : '📍'}
+                        </button>
+                        <button class="clip-action-btn" data-action="${clip.is_favorite ? 'unfavorite' : 'favorite'}" title="${clip.is_favorite ? 'Unfavorite' : 'Favorite'}">
+                            ${clip.is_favorite ? '⭐' : '☆'}
+                        </button>
+                        <button class="clip-action-btn" data-action="delete" title="Delete Clip">🗑️</button>
                     </div>
                 </div>
-                <div class="clip-content ${isMasked ? 'masked' : ''}">${this.escapeHtml(truncatedContent)}</div>
+
+                <div class="clip-content ${isMasked ? 'masked' : ''}">${this.escapeHtml(displayContent)}</div>
+
                 ${isMasked ? `
-                    <div style="margin-top: 0.5rem;">
-                        <button class="clip-action-btn" data-action="unlock" style="opacity: 1;">
-                            👁️ Show Password
+                    <div style="margin-bottom: 0.5rem;">
+                        <button class="secondary-btn" data-action="unlock" style="font-size: 0.78rem; padding: 0.35rem 0.65rem; width: 100%;">
+                            👁️ Unlock Password
                         </button>
                     </div>
                 ` : ''}
+
                 <div class="clip-footer">
-                    <span class="clip-time">${timeAgo}</span>
-                    <button class="clip-copy-btn" data-action="copy">
+                    <span class="clip-time" title="${fullTime}">${timeDisplay}</span>
+                    <button class="clip-copy-btn" data-action="copy" title="Copy to clipboard">
                         📋 Copy
                     </button>
                 </div>
@@ -272,37 +222,38 @@ class ClipboardApp {
 
     attachClipEventListeners() {
         document.querySelectorAll('.clip-card').forEach(card => {
-            const clipId = parseInt(card.dataset.id);
+            const clipId = parseInt(card.dataset.id, 10);
             const clip = this.clips.find(c => c.id === clipId);
-        
+
             card.addEventListener('click', (event) => {
-                if (clip && clip.category === 'password' && this.passwordLocked) {
-                    // Check if click target is the unlock button
-                    if (!event.target.closest('[data-action="unlock"]')) {
-                        // Ignore clicks outside the unlock button - do not open preview
-                        return;
+                if (event.target.closest('[data-action]')) {
+                    return; // Handled by action buttons
+                }
+                if (clip) {
+                    if (clip.category === 'password' && this.passwordLocked) {
+                        this.openUnlockModal();
+                    } else {
+                        this.openPreview(clip);
                     }
                 }
-                if (clip) this.openPreview(clip);
             });
-    
+
             card.querySelectorAll('[data-action]').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    this.handleClipAction(clipId, btn.dataset.action);
+                    this.handleClipAction(clipId, btn.dataset.action, btn);
                 });
             });
         });
     }
-    
 
     // ============= Actions =============
 
-    async handleClipAction(clipId, action) {
+    async handleClipAction(clipId, action, btnElement = null) {
         try {
             switch (action) {
                 case 'copy':
-                    await this.copyClip(clipId);
+                    await this.copyClip(clipId, btnElement);
                     break;
                 case 'pin':
                 case 'unpin':
@@ -315,56 +266,203 @@ class ClipboardApp {
                     await this.loadClips(this.currentCategory);
                     break;
                 case 'delete':
-                    if (confirm('Delete this clip?')) {
+                    if (confirm('Are you sure you want to delete this clip?')) {
                         await window.pywebview.api.delete_clip(clipId);
                         await this.loadClips(this.currentCategory);
+                        this.showToast('🗑️ Clip deleted');
                     }
                     break;
                 case 'unlock':
-                    await this.unlockPassword(clipId);
+                    this.openUnlockModal();
                     break;
             }
         } catch (error) {
-            console.error('Action failed:', error);
+            console.error('Clip action failed:', error);
         }
     }
 
-    async copyClip(clipId) {
+    async copyClip(clipId, btnElement = null) {
         try {
             const success = await window.pywebview.api.copy_clip(clipId);
             if (success) {
-                this.showNotification('✅ Copied to clipboard!');
+                if (btnElement) {
+                    const originalHtml = btnElement.innerHTML;
+                    btnElement.innerHTML = '✓ Copied!';
+                    btnElement.classList.add('copied');
+                    setTimeout(() => {
+                        btnElement.innerHTML = originalHtml;
+                        btnElement.classList.remove('copied');
+                    }, 1400);
+                }
+                this.showToast('📋 Copied to clipboard!');
+            } else {
+                this.showToast('❌ Copy failed: clip is protected or unavailable');
             }
         } catch (error) {
             console.error('Copy failed:', error);
         }
     }
 
-    async unlockPassword(clipId) {
+    // ============= Preview & Editing =============
+
+    openPreview(clip) {
+        this.currentPreviewClip = clip;
+        this.isEditing = false;
+
+        const modal = document.getElementById('previewModal');
+        const title = document.getElementById('previewTitle');
+        const tag = document.getElementById('previewCategoryTag');
+        const time = document.getElementById('previewTimestamp');
+        const chars = document.getElementById('previewCharCount');
+        const viewContent = document.getElementById('previewContent');
+        const editContent = document.getElementById('previewEditContent');
+
+        const copyBtn = document.getElementById('previewCopyBtn');
+        const editBtn = document.getElementById('previewEditBtn');
+        const saveBtn = document.getElementById('previewSaveBtn');
+        const cancelBtn = document.getElementById('previewCancelBtn');
+
+        title.textContent = `Clip Preview #${clip.id}`;
+        tag.textContent = clip.category;
+        time.textContent = clip.timestamp ? new Date(clip.timestamp + 'Z').toLocaleString() : '';
+        chars.textContent = `${(clip.content || '').length} characters`;
+
+        viewContent.textContent = clip.content;
+        editContent.value = clip.content;
+
+        viewContent.style.display = 'block';
+        editContent.style.display = 'none';
+
+        copyBtn.style.display = 'inline-block';
+        editBtn.style.display = 'inline-block';
+        saveBtn.style.display = 'none';
+        cancelBtn.style.display = 'none';
+
+        modal.classList.add('active');
+    }
+
+    enterEditMode() {
+        this.isEditing = true;
+        document.getElementById('previewContent').style.display = 'none';
+        const editContent = document.getElementById('previewEditContent');
+        editContent.style.display = 'block';
+
+        document.getElementById('previewCopyBtn').style.display = 'none';
+        document.getElementById('previewEditBtn').style.display = 'none';
+        document.getElementById('previewSaveBtn').style.display = 'inline-block';
+        document.getElementById('previewCancelBtn').style.display = 'inline-block';
+
+        editContent.focus();
+    }
+
+    exitEditMode() {
+        this.isEditing = false;
+        document.getElementById('previewContent').style.display = 'block';
+        document.getElementById('previewEditContent').style.display = 'none';
+
+        document.getElementById('previewCopyBtn').style.display = 'inline-block';
+        document.getElementById('previewEditBtn').style.display = 'inline-block';
+        document.getElementById('previewSaveBtn').style.display = 'none';
+        document.getElementById('previewCancelBtn').style.display = 'none';
+
+        if (this.currentPreviewClip) {
+            document.getElementById('previewEditContent').value = this.currentPreviewClip.content;
+        }
+    }
+
+    async saveEditedContent() {
+        const editContent = document.getElementById('previewEditContent');
+        const newText = editContent.value.trim();
+
+        if (!newText) {
+            alert('Clip content cannot be empty.');
+            return;
+        }
+
+        if (newText === this.currentPreviewClip.content) {
+            this.exitEditMode();
+            return;
+        }
+
+        try {
+            const success = await window.pywebview.api.update_clip_content(this.currentPreviewClip.id, newText);
+            if (success) {
+                this.currentPreviewClip.content = newText;
+                document.getElementById('previewContent').textContent = newText;
+                document.getElementById('previewCharCount').textContent = `${newText.length} characters`;
+                this.exitEditMode();
+                await this.loadClips(this.currentCategory);
+                this.showToast('✅ Clip updated successfully!');
+            } else {
+                alert('Failed to update clip.');
+            }
+        } catch (error) {
+            console.error('Update clip error:', error);
+        }
+    }
+
+    // ============= Modals Management =============
+
+    openUnlockModal() {
         const modal = document.getElementById('unlockModal');
         const input = document.getElementById('unlockPasskeyInput');
-        const unlockBtn = document.getElementById('unlockBtn');
         const errorMsg = document.getElementById('unlockError');
 
         modal.classList.add('active');
         input.value = '';
         errorMsg.style.display = 'none';
-
-        unlockBtn.onclick = async () => {
-            const passkey = input.value;
-            const verified = await window.pywebview.api.verify_passkey(passkey);
-            
-            if (verified) {
-                this.passwordLocked = false;
-                modal.classList.remove('active');
-                await this.loadClips(this.currentCategory);
-            } else {
-                errorMsg.style.display = 'block';
-            }
-        };
+        setTimeout(() => input.focus(), 100);
     }
 
-    // ============= Event Listeners =============
+    async submitUnlock() {
+        const input = document.getElementById('unlockPasskeyInput');
+        const errorMsg = document.getElementById('unlockError');
+        const passkey = input.value;
+
+        if (!passkey) return;
+
+        const verified = await window.pywebview.api.verify_passkey(passkey);
+        if (verified) {
+            this.passwordLocked = false;
+            document.getElementById('unlockModal').classList.remove('active');
+            await this.loadClips(this.currentCategory);
+            this.showToast('🔓 Password clips unlocked');
+        } else {
+            errorMsg.style.display = 'block';
+        }
+    }
+
+    async openStatsModal() {
+        try {
+            const statsStr = await window.pywebview.api.get_app_stats();
+            const stats = JSON.parse(statsStr);
+
+            document.getElementById('statTotalClips').textContent = stats.total_clips;
+            document.getElementById('statPinnedClips').textContent = stats.pinned_clips;
+            document.getElementById('statFavoriteClips').textContent = stats.favorite_clips;
+
+            const sizeKb = (stats.db_size_bytes / 1024).toFixed(1);
+            document.getElementById('statDbSize').textContent = `${sizeKb} KB`;
+
+            const catContainer = document.getElementById('statsCategories');
+            catContainer.innerHTML = Object.entries(stats.categories || {})
+                .map(([cat, count]) => {
+                    const info = this.categoryInfo[cat] || { icon: '📝' };
+                    return `
+                        <div class="stat-cat-row">
+                            <span>${info.icon} ${cat}</span>
+                            <strong>${count}</strong>
+                        </div>
+                    `;
+                }).join('');
+
+            document.getElementById('statsModal').classList.add('active');
+        } catch (error) {
+            console.error('Failed to load stats:', error);
+        }
+    }
+
+    // ============= Event Listeners & Hotkeys =============
 
     setupEventListeners() {
         // Category navigation
@@ -372,246 +470,314 @@ class ClipboardApp {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                
-                const category = btn.dataset.category;
-                this.currentCategory = category;
-                
-                // Update title
-                const title = btn.textContent.trim();
-                document.getElementById('contentTitle').textContent = title;
-                
-                this.loadClips(category);
+
+                this.currentCategory = btn.dataset.category;
+                this.searchQuery = '';
+                document.getElementById('searchInput').value = '';
+                document.getElementById('searchClearBtn').style.display = 'none';
+
+                const label = btn.querySelector('.cat-label').textContent;
+                document.getElementById('contentTitle').textContent = label;
+
+                this.loadClips(this.currentCategory, true);
             });
         });
 
-        // Search
+        // Filter chips (Pinned & Favorites)
+        const filterPinnedBtn = document.getElementById('filterPinnedBtn');
+        filterPinnedBtn.addEventListener('click', () => {
+            if (this.filterType === 'pinned') {
+                this.filterType = 'none';
+                filterPinnedBtn.classList.remove('active');
+            } else {
+                this.filterType = 'pinned';
+                filterPinnedBtn.classList.add('active');
+                document.getElementById('filterFavoriteBtn').classList.remove('active');
+            }
+            this.loadClips(this.currentCategory);
+        });
+
+        const filterFavoriteBtn = document.getElementById('filterFavoriteBtn');
+        filterFavoriteBtn.addEventListener('click', () => {
+            if (this.filterType === 'favorite') {
+                this.filterType = 'none';
+                filterFavoriteBtn.classList.remove('active');
+            } else {
+                this.filterType = 'favorite';
+                filterFavoriteBtn.classList.add('active');
+                document.getElementById('filterPinnedBtn').classList.remove('active');
+            }
+            this.loadClips(this.currentCategory);
+        });
+
+        // Search Input & Clear
         const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('searchClearBtn');
+
         searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.trim();
+            this.searchQuery = query;
+            clearBtn.style.display = query ? 'block' : 'none';
+
             clearTimeout(this.searchTimeout);
             this.searchTimeout = setTimeout(() => {
-                this.searchClips(e.target.value);
-            }, 300);
+                this.loadClips(this.currentCategory);
+            }, 250);
         });
 
-        // Settings modal
-        const settingsBtn = document.getElementById('settingsBtn');
-        const settingsModal = document.getElementById('settingsModal');
-        const closeBtn = settingsModal.querySelector('.close-btn');
-
-        settingsBtn.addEventListener('click', () => {
-            settingsModal.classList.add('active');
+        clearBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            this.searchQuery = '';
+            clearBtn.style.display = 'none';
+            this.loadClips(this.currentCategory);
+            searchInput.focus();
         });
 
-        closeBtn.addEventListener('click', () => {
-            settingsModal.classList.remove('active');
+        // Floating manual snippet add
+        const manualAddBtn = document.getElementById('manualAddBtn');
+        const manualInput = document.getElementById('manualSnippetInput');
+
+        const addSnippet = async () => {
+            const content = manualInput.value.trim();
+            if (!content) return;
+
+            const category = document.getElementById('manualCategorySelect').value;
+            const success = await window.pywebview.api.manual_add_clip(content, category);
+            if (success) {
+                manualInput.value = '';
+                this.showToast('✅ Snippet added to clips');
+                await this.loadClips(this.currentCategory);
+            }
+        };
+
+        manualAddBtn.addEventListener('click', addSnippet);
+        manualInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addSnippet();
+            }
         });
 
-        // Category toggles
-        document.querySelectorAll('.toggle-item input[type="checkbox"]').forEach(checkbox => {
-            checkbox.addEventListener('change', async (e) => {
-                const category = e.target.dataset.category;
-                const enabled = e.target.checked;
-                await window.pywebview.api.set_category_enabled(category, enabled);
+        // Header Buttons
+        document.getElementById('statsBtn').addEventListener('click', () => this.openStatsModal());
+        document.getElementById('settingsBtn').addEventListener('click', () => {
+            document.getElementById('settingsModal').classList.add('active');
+        });
+
+        // Generic Modal close buttons
+        document.querySelectorAll('.close-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const modalId = btn.dataset.modal;
+                if (modalId) {
+                    document.getElementById(modalId).classList.remove('active');
+                } else {
+                    btn.closest('.modal').classList.remove('active');
+                }
+                this.exitEditMode();
+            });
+        });
+
+        // Close modal on outside backdrop click
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                    this.exitEditMode();
+                }
             });
         });
 
         // Passkey setup
-        const setPasskeyBtn = document.getElementById('setPasskeyBtn');
-        setPasskeyBtn.addEventListener('click', async () => {
+        document.getElementById('setPasskeyBtn').addEventListener('click', async () => {
             const passkey = document.getElementById('passkeyInput').value;
             if (passkey.length < 4) {
                 alert('Passkey must be at least 4 characters');
                 return;
             }
-            
             const success = await window.pywebview.api.setup_passkey(passkey);
             if (success) {
                 document.getElementById('passkeySetup').style.display = 'none';
                 document.getElementById('passkeyStatus').style.display = 'block';
-                this.showNotification('✅ Passkey set successfully!');
-            }
-        });
-
-        // Lock passwords
-        const lockBtn = document.getElementById('lockPasswordsBtn');
-        lockBtn.addEventListener('click', async () => {
-            await window.pywebview.api.lock_passwords();
-            this.passwordLocked = true;
-            await this.loadClips(this.currentCategory);
-            this.showNotification('🔒 Passwords locked');
-        });
-
-        // Cleanup
-        const cleanupBtn = document.getElementById('cleanupBtn');
-        cleanupBtn.addEventListener('click', async () => {
-            if (confirm('Delete clips older than 30 days?')) {
-                const deleted = await window.pywebview.api.cleanup_old_clips(30);
-                this.showNotification(`🗑️ Deleted ${deleted} old clips`);
+                this.passwordLocked = false;
+                this.showToast('🔒 Master passkey configured!');
                 await this.loadClips(this.currentCategory);
             }
         });
 
-        // Export
-        const exportBtn = document.getElementById('exportBtn');
-        exportBtn.addEventListener('click', async () => {
-            const data = await window.pywebview.api.export_clips();
-            this.downloadFile('clipboard_export.json', data);
-            this.showNotification('📤 Clips exported!');
+        // Lock Passwords button
+        document.getElementById('lockPasswordsBtn').addEventListener('click', async () => {
+            await window.pywebview.api.lock_passwords();
+            this.passwordLocked = true;
+            await this.loadClips(this.currentCategory);
+            this.showToast('🔒 Passwords locked');
         });
 
-        // Manual snippet add
-        const manualAddBtn = document.getElementById('manualAddBtn');
-        manualAddBtn.addEventListener('click', async () => {
-            const content = document.getElementById('manualSnippetInput').value.trim();
-            if (!content) {
-                alert('Please enter a snippet to add.');
-                return;
+        // Unlock Modal submit
+        document.getElementById('unlockBtn').addEventListener('click', () => this.submitUnlock());
+        document.getElementById('unlockPasskeyInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.submitUnlock();
             }
-            const category = document.getElementById('manualCategorySelect').value;
+        });
 
+        // Category checkboxes in Settings
+        document.querySelectorAll('.toggle-item input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', async (e) => {
+                const category = e.target.dataset.category;
+                await window.pywebview.api.set_category_enabled(category, e.target.checked);
+            });
+        });
+
+        // Export button
+        document.getElementById('exportBtn').addEventListener('click', async () => {
             try {
-                const success = await window.pywebview.api.manual_add_clip(content, category);
-                if (success) {
-                    this.showNotification('✅ Snippet added!');
-                    document.getElementById('manualSnippetInput').value = '';
-                    if (this.currentCategory === 'all' || this.currentCategory === category) {
-                        await this.loadClips(this.currentCategory);
-                    }
-                } else {
-                    alert('Failed to add snippet.');
-                }
+                const filePath = await window.pywebview.api.export_clips_to_file();
+                this.showToast(`📤 Clips exported to:\n${filePath}`);
             } catch (error) {
-                console.error('Error adding snippet:', error);
+                // Fallback to in-browser JSON blob download
+                try {
+                    const data = await window.pywebview.api.export_clips();
+                    this.downloadFile('clipboard_export.json', data);
+                    this.showToast('📤 Clips downloaded as JSON');
+                } catch (e) {
+                    alert('Export failed: ' + error.message);
+                }
             }
         });
+
+        // Cleanup button
+        document.getElementById('cleanupBtn').addEventListener('click', async () => {
+            if (confirm('Delete unpinned clips older than 30 days?')) {
+                const count = await window.pywebview.api.cleanup_old_clips(30);
+                this.showToast(`🗑️ Cleaned up ${count} old clips`);
+                await this.loadClips(this.currentCategory);
+            }
+        });
+
+        // Preview modal buttons
+        document.getElementById('previewCopyBtn').addEventListener('click', () => {
+            if (this.currentPreviewClip) {
+                this.copyClip(this.currentPreviewClip.id);
+            }
+        });
+        document.getElementById('previewEditBtn').addEventListener('click', () => this.enterEditMode());
+        document.getElementById('previewSaveBtn').addEventListener('click', () => this.saveEditedContent());
+        document.getElementById('previewCancelBtn').addEventListener('click', () => this.exitEditMode());
     }
 
-    async searchClips(query) {
-        if (!query.trim()) {
-            await this.loadClips(this.currentCategory);
-            return;
-        }
+    setupKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            // Escape: Close modals or clear search
+            if (e.key === 'Escape') {
+                const openModal = document.querySelector('.modal.active');
+                if (openModal) {
+                    openModal.classList.remove('active');
+                    this.exitEditMode();
+                } else if (this.searchQuery) {
+                    document.getElementById('searchInput').value = '';
+                    this.searchQuery = '';
+                    document.getElementById('searchClearBtn').style.display = 'none';
+                    this.loadClips(this.currentCategory);
+                }
+            }
 
-        try {
-            const results = await window.pywebview.api.search_clips(query);
-            this.clips = JSON.parse(results);
-            this.renderClips();
-        } catch (error) {
-            console.error('Search failed:', error);
-        }
+            // Ctrl + F or Slash: Focus search
+            if ((e.ctrlKey && e.key.toLowerCase() === 'f') || (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA')) {
+                e.preventDefault();
+                const input = document.getElementById('searchInput');
+                input.focus();
+                input.select();
+            }
+
+            // Ctrl + N: Focus new snippet
+            if (e.ctrlKey && e.key.toLowerCase() === 'n') {
+                e.preventDefault();
+                document.getElementById('manualSnippetInput').focus();
+            }
+
+            // Ctrl + I: Stats
+            if (e.ctrlKey && e.key.toLowerCase() === 'i') {
+                e.preventDefault();
+                this.openStatsModal();
+            }
+
+            // Ctrl + ,: Settings
+            if (e.ctrlKey && e.key === ',') {
+                e.preventDefault();
+                document.getElementById('settingsModal').classList.toggle('active');
+            }
+
+            // Ctrl + Enter in Edit Mode: Save
+            if (e.ctrlKey && e.key === 'Enter' && this.isEditing) {
+                e.preventDefault();
+                this.saveEditedContent();
+            }
+        });
     }
 
     // ============= Utilities =============
 
-    startAutoRefresh() {
-        // Refresh clips every 2 seconds to catch new ones
-        setInterval(async () => {
-            if (this.currentCategory === 'all' && !document.getElementById('searchInput').value) {
-                await this.loadClips('all');
-            }
-        }, 2000);
-    }
+    formatRelativeTime(isoString) {
+        if (!isoString) return '';
+        try {
+            const date = new Date(isoString.replace(' ', 'T') + 'Z');
+            const now = new Date();
+            const diffSec = Math.floor((now - date) / 1000);
 
-    getTimeAgo(utcTimestamp) {
-        // Parse the UTC timestamp, add +5:30 hours for IST
-        const utcDate = new Date(utcTimestamp + "Z");
-        const istOffsetMs = 5.5 * 60 * 60 * 1000;
-        const istDate = new Date(utcDate.getTime() + istOffsetMs);
-        const now = new Date();
-        const secondsAgo = Math.floor((now - istDate) / 1000);
-      
-        if (secondsAgo < 60) return 'Just now';
-        if (secondsAgo < 3600) return `${Math.floor(secondsAgo / 60)}m ago`;
-        if (secondsAgo < 86400) return `${Math.floor(secondsAgo / 3600)}h ago`;
-        return `${Math.floor(secondsAgo / 86400)}d ago`;
+            if (diffSec < 60) return 'Just now';
+            if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+            if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+            if (diffSec < 604800) return `${Math.floor(diffSec / 86400)}d ago`;
+
+            return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        } catch (e) {
+            return isoString;
+        }
     }
-    formatTimestampIST(isoTimestamp) {
-        // Parse as local date (no manual offset)
-        const utcDate = new Date(isoTimestamp + 'Z');
-  
-        // Format to string in Asia/Kolkata timezone (IST)
-        return utcDate.toLocaleString('en-IN', {
-            timeZone: 'Asia/Kolkata',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-        });
-    }
-    
-      
 
     escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+        if (!text) return '';
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
     }
 
-    showNotification(message) {
-        // Simple notification - could be enhanced with toast library
-        const notification = document.createElement('div');
-        notification.textContent = message;
-        notification.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: var(--primary-color);
-            color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            box-shadow: var(--shadow-lg);
-            z-index: 10000;
-            animation: slideIn 0.3s ease;
-        `;
-        
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            notification.style.animation = 'slideOut 0.3s ease';
-            setTimeout(() => notification.remove(), 300);
-        }, 3000);
+    showToast(message) {
+        let container = document.querySelector('.toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        container.appendChild(toast);
+
+        setTimeout(() => toast.remove(), 3000);
     }
 
     downloadFile(filename, content) {
-        const blob = new Blob([content], { type: 'application/json' });
+        const blob = new Blob([content], { type: 'application/json;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = filename;
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
         URL.revokeObjectURL(url);
     }
 }
 
-// Initialize app when DOM is ready
+// Initialize application on DOM readiness
 document.addEventListener('DOMContentLoaded', () => {
     window.clipboardApp = new ClipboardApp();
-});
-
-// Export all clips
-document.getElementById('exportBtn').onclick = async function() {
-    try {
-        const filePath = await window.pywebview.api.export_clips_to_file();
-        console.log("Exported file path:", filePath);
-        alert('Export completed! File saved at:\n' + filePath);
-    } catch (error) {
-        alert('Export failed: ' + error.message);
-    }
-};
-
-
-document.getElementById('cleanupBtn').onclick = async function() {
-    if (window.pywebview) {
-        await window.pywebview.api.cleanup_old_clips();
-        // Optionally: refresh UI
-    }
-};
-const unlockModal = document.getElementById('unlockModal');
-const unlockCloseBtn = document.getElementById('unlockCloseBtn');
-
-unlockCloseBtn.addEventListener('click', () => {
-  unlockModal.classList.remove('active');
 });

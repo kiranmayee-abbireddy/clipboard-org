@@ -1,4 +1,4 @@
-// frontend/js/themes.js
+// src/frontend/js/themes.js
 
 const THEMES = {
     light: [
@@ -44,18 +44,16 @@ class ThemeManager {
         const themeGrid = document.getElementById('themeGrid');
         if (!themeGrid) return;
 
-        // Clear existing themes
         themeGrid.innerHTML = '';
-
-        // Load themes for current mode
         const themes = THEMES[this.currentMode];
+
         themes.forEach(theme => {
             const themeOption = document.createElement('div');
             themeOption.className = 'theme-option';
             themeOption.dataset.theme = theme.id;
             themeOption.innerHTML = `
-                <div style="font-size: 2rem; margin-bottom: 0.5rem;">${theme.preview}</div>
-                <div style="font-size: 0.85rem;">${theme.name}</div>
+                <div style="font-size: 1.6rem; margin-bottom: 0.25rem;">${theme.preview}</div>
+                <div style="font-size: 0.8rem; font-weight: 500;">${theme.name}</div>
             `;
             
             if (theme.id === this.currentTheme) {
@@ -71,9 +69,8 @@ class ThemeManager {
     }
 
     setupEventListeners() {
-        // Mode toggle buttons
-        const modeButtons = document.querySelectorAll('.mode-btn');
-        modeButtons.forEach(btn => {
+        // Mode toggle buttons in settings
+        document.querySelectorAll('.mode-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const mode = btn.dataset.mode;
                 this.switchMode(mode);
@@ -87,20 +84,30 @@ class ThemeManager {
                 this.toggleMode();
             });
         }
+
+        // Keyboard shortcut: Ctrl + T (or Alt + T) to toggle light/dark mode
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.altKey) && e.key.toLowerCase() === 't') {
+                e.preventDefault();
+                this.toggleMode();
+            }
+        });
     }
 
     switchMode(mode) {
         this.currentMode = mode;
 
-        // Update mode buttons
         document.querySelectorAll('.mode-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.mode === mode);
         });
 
-        // Reload theme grid
-        this.loadThemeGrid();
+        // Pick default theme for mode if current theme doesn't belong to it
+        const currentModeThemes = THEMES[this.currentMode].map(t => t.id);
+        if (!currentModeThemes.includes(this.currentTheme)) {
+            this.currentTheme = this.currentMode === 'light' ? 'sunrise' : 'midnight';
+        }
 
-        // Apply theme
+        this.loadThemeGrid();
         this.applyTheme(mode, this.currentTheme);
     }
 
@@ -112,52 +119,47 @@ class ThemeManager {
     selectTheme(themeId) {
         this.currentTheme = themeId;
 
-        // Update active state
         document.querySelectorAll('.theme-option').forEach(option => {
             option.classList.toggle('active', option.dataset.theme === themeId);
         });
 
-        // Apply theme
         this.applyTheme(this.currentMode, themeId);
     }
 
     applyTheme(mode, themeId) {
         const body = document.body;
 
-        // Remove all theme classes
         body.className = body.className.split(' ')
             .filter(c => !c.startsWith('theme-'))
             .join(' ');
 
-        // Add new theme classes
         body.classList.add(`theme-${mode}`, `theme-${themeId}`);
 
-        // Save to backend
         if (window.pywebview && window.pywebview.api) {
-            window.pywebview.api.set_theme(mode, themeId);
+            try {
+                window.pywebview.api.set_theme(mode, themeId);
+            } catch (e) {
+                console.debug('Failed to persist theme setting:', e);
+            }
         }
     }
 
     async waitForAPI() {
         while (!(window.pywebview && window.pywebview.api)) {
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, 50));
         }
     }
 
     async loadSavedTheme() {
-        console.log("Loading saved theme...");
         await this.waitForAPI();
         
         try {
-            console.log("Loading second saved theme...");
             const settings = await window.pywebview.api.get_theme_settings();
             const themeSettings = JSON.parse(settings);
-            console.log(themeSettings);
             
             this.currentMode = themeSettings.mode || 'light';
-            this.currentTheme = themeSettings.style || 'sunrise';
+            this.currentTheme = themeSettings.style || (this.currentMode === 'light' ? 'sunrise' : 'midnight');
 
-            // Update UI
             document.querySelectorAll('.mode-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.mode === this.currentMode);
             });
@@ -165,13 +167,11 @@ class ThemeManager {
             this.loadThemeGrid();
             this.applyTheme(this.currentMode, this.currentTheme);
         } catch (error) {
-            console.error('Failed to load theme settings:', error);
+            console.debug('Using default theme:', error);
         }
     }
 }
 
-
-// Initialize theme manager when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     window.themeManager = new ThemeManager();
 });
