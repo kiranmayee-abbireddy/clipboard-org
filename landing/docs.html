@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentation - ClipBox Windows Clipboard Manager</title>
+  <meta name="description" content="Technical documentation, architecture details, keyboard shortcuts, and database guide for ClipBox.">
+  <link rel="icon" href="clipbox.ico">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <nav class="site-nav" aria-label="Main Navigation">
+    <div class="container nav-inner">
+      <a href="index.html" class="brand-link">
+        <span>ClipBox</span>
+        <span class="brand-tag">v1.2.0</span>
+      </a>
+      <div class="nav-actions">
+        <a href="index.html" class="nav-menu-link">Overview</a>
+        <a href="docs.html" class="nav-menu-link">Documentation</a>
+        <a href="license.html" class="nav-menu-link">License</a>
+        <a href="downloads/ClipBox-Setup-v1.2.0.exe" class="button-primary" download>Download Setup</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Docs Header -->
+    <section class="hero-section" aria-labelledby="docs-heading">
+      <div class="container">
+        <div class="section-head-wrap">
+          <h1 id="docs-heading" class="section-title">ClipBox Documentation</h1>
+          <p class="section-sublead">Complete reference manual for architecture, data retention, security, and usage.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Content Sections -->
+    <section class="features-section" aria-labelledby="arch-heading">
+      <div class="container">
+        <div class="section-head-wrap">
+          <h2 id="arch-heading" class="section-title">System Architecture</h2>
+          <p class="section-sublead">Engineered as an event-driven Windows background service.</p>
+        </div>
+
+        <div class="features-grid">
+          <div class="feature-card">
+            <span class="feature-num">01</span>
+            <h3 class="feature-title">Win32 event listener</h3>
+            <p class="feature-body">Uses native Windows clipboard hooks for immediate capture without CPU polling loops.</p>
+          </div>
+
+          <div class="feature-card">
+            <span class="feature-num">02</span>
+            <h3 class="feature-title">SQLite WAL storage</h3>
+            <p class="feature-body">Write-Ahead Logging provides lock-free concurrency and persistent local history retention.</p>
+          </div>
+
+          <div class="feature-card">
+            <span class="feature-num">03</span>
+            <h3 class="feature-title">WebView2 shell</h3>
+            <p class="feature-body">Renders a high-density, accessible frontend through the native Microsoft Edge runtime.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Security & Crypto Section -->
+    <section class="comparison-section" aria-labelledby="security-heading">
+      <div class="container">
+        <div class="section-head-wrap">
+          <h2 id="security-heading" class="section-title">Cryptographic Protection</h2>
+          <p class="section-sublead">Guarding confidential tokens, API secrets, and sensitive credentials.</p>
+        </div>
+
+        <div class="comparison-grid">
+          <div class="comparison-pane">
+            <div class="comparison-label">key derivation</div>
+            <div class="comparison-content-list">
+              <div class="comparison-row">
+                <span class="comparison-key">Algorithmic key stretching</span>
+                <span class="comparison-desc">Stretches user passphrases using 100,000 algorithmic rounds.</span>
+              </div>
+              <div class="comparison-row">
+                <span class="comparison-key">Cryptographic salt</span>
+                <span class="comparison-desc">Generates independent 16-byte random values per encryption key.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="comparison-pane">
+            <div class="comparison-label">symmetric payload cipher</div>
+            <div class="comparison-content-list">
+              <div class="comparison-row">
+                <span class="comparison-key">Fernet standard</span>
+                <span class="comparison-desc">Combines AES-128-CBC cipher blocks with authenticated signatures.</span>
+              </div>
+              <div class="comparison-row">
+                <span class="comparison-key">Zero-knowledge memory</span>
+                <span class="comparison-desc">Plaintext variables are decrypted only during active user inspection.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Shortcuts & Operations Section -->
+    <section class="specs-section" aria-labelledby="ops-heading">
+      <div class="container">
+        <div class="section-head-wrap">
+          <h2 id="ops-heading" class="section-title">Operational Shortcuts</h2>
+          <p class="section-sublead">Keyboard navigation bindings configured for maximum daily productivity.</p>
+        </div>
+
+        <div class="specs-grid">
+          <div class="specs-table-wrap">
+            <table class="specs-table">
+              <thead>
+                <tr>
+                  <th scope="col">Command</th>
+                  <th scope="col">Result</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">Ctrl + Space</th>
+                  <td>Toggle window visibility</td>
+                </tr>
+                <tr>
+                  <th scope="row">Arrow Up / Down</th>
+                  <td>Navigate history items</td>
+                </tr>
+                <tr>
+                  <th scope="row">Enter</th>
+                  <td>Copy selected entry</td>
+                </tr>
+                <tr>
+                  <th scope="row">Ctrl + P</th>
+                  <td>Pin or unpin snippet</td>
+                </tr>
+                <tr>
+                  <th scope="row">Delete</th>
+                  <td>Remove active record</td>
+                </tr>
+                <tr>
+                  <th scope="row">Escape</th>
+                  <td>Minimize to tray</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="shortcuts-panel">
+            <h3 class="shortcuts-headline">Local Data Storage</h3>
+            <div class="shortcut-item">
+              <span class="shortcut-action">Database Path</span>
+              <span class="keycap">clipboard_data.db</span>
+            </div>
+            <div class="shortcut-item">
+              <span class="shortcut-action">Journal Mode</span>
+              <span class="keycap">wal mode</span>
+            </div>
+            <div class="shortcut-item">
+              <span class="shortcut-action">Disk Synchronous</span>
+              <span class="keycap">normal sync</span>
+            </div>
+            <div class="shortcut-item">
+              <span class="shortcut-action">Default Limit</span>
+              <span class="keycap">1,000 clips</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <div class="footer-brand">ClipBox</div>
+          <p class="footer-desc">Aesthetic, privacy-focused clipboard management utility for Windows desktops.</p>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col-title">Distribution</div>
+          <div class="footer-nav-list">
+            <a href="downloads/ClipBox-Setup-v1.2.0.exe" class="footer-link" download>Inno Setup Installer (.exe)</a>
+            <a href="https://github.com/kiranmayee-abbireddy/clipboard-org/releases" class="footer-link" target="_blank" rel="noopener noreferrer">GitHub Releases</a>
+            <a href="docs.html" class="footer-link">Documentation</a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col-title">Project</div>
+          <div class="footer-nav-list">
+            <a href="https://github.com/kiranmayee-abbireddy/clipboard-org" class="footer-link" target="_blank" rel="noopener noreferrer">Source Code</a>
+            <a href="https://github.com/kiranmayee-abbireddy/clipboard-org/issues" class="footer-link" target="_blank" rel="noopener noreferrer">Issue Tracker</a>
+            <a href="license.html" class="footer-link">Software License</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span class="footer-copy">ClipBox</span>
+        <span class="footer-copy">Clean Inno Setup 6 packaging</span>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
