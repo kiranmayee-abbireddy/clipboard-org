@@ -532,4 +532,66 @@
   .features-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  .hero-section {
+    padding-block-start: var(--space-xl);
+    padding-block-end: var(--space-2xl);
+  }
+
+  .comparison-section,
+  .features-section,
+  .specs-section,
+  .download-cta-section {
+    padding-block: var(--section-gap-s);
+  }
+}
+
+@media (max-width: 48rem) {
+  .nav-menu-link {
+    display: none;
+  }
+
+  .specs-table th {
+    width: 50%;
+  }
+
+  .cta-box {
+    padding: var(--space-xl) var(--space-md);
+  }
+}
+
+@media (max-width: 32rem) {
+  .hero-headline {
+    font-size: var(--text-display-s);
+  }
+
+  .hero-actions,
+  .cta-button-row {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .button-primary,
+  .button-secondary {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .comparison-pane,
+  .shortcuts-panel {
+    padding: var(--space-md);
+  }
+
+  .specs-table th,
+  .specs-table td {
+    font-size: var(--text-xs);
+    padding-block: var(--space-xs);
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-xs);
+  }
 }

@@ -45,6 +45,9 @@ clipboard_monitor.log
 clipbox_export*.json
 *.tmp
 
+# Netlify
+.netlify/
+
 # Environments
 .env
 .venv

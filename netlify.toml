@@ -1,0 +1,17 @@
+# netlify.toml
+[build]
+  publish = "landing"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/downloads/*.exe"
+  [headers.values]
+    Content-Disposition = "attachment; filename=\"ClipBox-Setup-v1.2.0.exe\""
+    Content-Type = "application/octet-stream"
