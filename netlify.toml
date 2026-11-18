@@ -2,6 +2,36 @@
 [build]
   publish = "landing"
 
+[[redirects]]
+  from = "/docs"
+  to = "https://github.com/kiranmayee-abbireddy/clipboard-org/blob/master/docs/ARCHITECTURE.md"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/docs.html"
+  to = "https://github.com/kiranmayee-abbireddy/clipboard-org/blob/master/docs/ARCHITECTURE.md"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/architecture"
+  to = "https://github.com/kiranmayee-abbireddy/clipboard-org/blob/master/docs/ARCHITECTURE.md"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/license"
+  to = "https://github.com/kiranmayee-abbireddy/clipboard-org/blob/master/LICENSE"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/license.html"
+  to = "https://github.com/kiranmayee-abbireddy/clipboard-org/blob/master/LICENSE"
+  status = 301
+  force = true
+
 [[headers]]
   for = "/*"
   [headers.values]

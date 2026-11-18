@@ -196,7 +196,9 @@ A bespoke product landing page built with Hallmark design principles is located 
 
 ---
 
-## 📁 Project Structure
+## 📁 Project Structure & Architecture
+
+For an in-depth architectural breakdown of the Win32 message loop, SQLite WAL storage, Fernet cryptographic layer, and event polling model, see the [Architecture Documentation](docs/ARCHITECTURE.md).
 
 ```
 clipboard-org/
