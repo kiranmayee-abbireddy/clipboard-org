@@ -1,0 +1,26 @@
+[
+  {
+    "shape": "workbench",
+    "theme": "rim",
+    "axes": "dark/grotesk-sans/warm",
+    "hero": "stage",
+    "nav": "edge-aligned",
+    "footer": "index",
+    "imagery": "product",
+    "photos": [],
+    "entry": "landing/index.html",
+    "fingerprint": "clipbox-landing-rim-v1",
+    "sections": [
+      "hero",
+      "comparison",
+      "features",
+      "specs",
+      "download",
+      "footer"
+    ],
+    "signature": "live interactive clipboard workbench",
+    "waived": [],
+    "prompt": "create a landing page for this app with downloadble inno setup installer for this app",
+    "timestamp": "2026-11-18T19:59:00.000Z"
+  }
+]

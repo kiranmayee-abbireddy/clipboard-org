@@ -9,6 +9,8 @@ __pycache__/
 # Distribution / packaging
 build/
 dist/
+landing/downloads/*.exe
+*.exe
 eggs/
 .eggs/
 lib/

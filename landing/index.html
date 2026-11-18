@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClipBox - Fast Windows Clipboard Manager</title>
+  <meta name="description" content="A fast, aesthetic, and privacy-focused clipboard manager for Windows with auto-categorization and Fernet AES encryption.">
+  <link rel="icon" href="clipbox.ico">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="site-nav" aria-label="Main Navigation">
+    <div class="container nav-inner">
+      <a href="#" class="brand-link">
+        <span>ClipBox</span>
+        <span class="brand-tag">v1.2.0</span>
+      </a>
+      <div class="nav-actions">
+        <a href="#comparison" class="nav-menu-link">Comparison</a>
+        <a href="#features" class="nav-menu-link">Features</a>
+        <a href="#specs" class="nav-menu-link">Specifications</a>
+        <a href="downloads/ClipBox-Setup-v1.2.0.exe" class="button-primary" download>Download Setup</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero-section" aria-labelledby="hero-heading">
+      <div class="container hero-grid">
+        <div class="hero-text-block">
+          <h1 id="hero-heading" class="hero-headline">Clipboard history with instant categorisation</h1>
+          <p class="hero-lead">ClipBox silently captures, encrypts, and indexes clipboard snippets on Windows desktops.</p>
+          <div class="hero-actions">
+            <a href="downloads/ClipBox-Setup-v1.2.0.exe" class="button-primary" download>
+              Download Installer
+            </a>
+            <a href="https://github.com/kiranmayee-abbireddy/clipboard-org" class="button-secondary" target="_blank" rel="noopener noreferrer">
+              Source Code
+            </a>
+          </div>
+          <div class="hero-meta-row">
+            <span class="meta-item">Version 1.2.0</span>
+            <span class="meta-divider">/</span>
+            <span class="meta-item">19.9 MB Inno Setup package</span>
+            <span class="meta-divider">/</span>
+            <span class="meta-item">Windows 10 and 11</span>
+          </div>
+        </div>
+
+        <!-- Interactive Workbench (Signature) -->
+        <div class="workbench-card" aria-label="ClipBox live capture demo">
+          <div class="workbench-header">
+            <span class="workbench-title">live buffer</span>
+            <span class="workbench-badge">wal active</span>
+          </div>
+
+          <div class="workbench-item" tabindex="0">
+            <div class="item-top">
+              <span class="item-tag">url</span>
+              <span class="item-time">just now</span>
+            </div>
+            <div class="item-body">https://github.com/kiranmayee-abbireddy/clipboard-org</div>
+          </div>
+
+          <div class="workbench-item" tabindex="0">
+            <div class="item-top">
+              <span class="item-tag">code</span>
+              <span class="item-time">1m ago</span>
+            </div>
+            <div class="item-body">def bump_or_add_clip(content, category):</div>
+          </div>
+
+          <div class="workbench-item" tabindex="0">
+            <div class="item-top">
+              <span class="item-tag">password</span>
+              <span class="item-time">4m ago</span>
+            </div>
+            <div class="item-body">sk-ant-api03-918237461928471928374</div>
+          </div>
+
+          <div class="workbench-item" tabindex="0">
+            <div class="item-top">
+              <span class="item-tag">email</span>
+              <span class="item-time">12m ago</span>
+            </div>
+            <div class="item-body">developer@clipbox.internal</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Before & After Comparison -->
+    <section id="comparison" class="comparison-section" aria-labelledby="comparison-heading">
+      <div class="container">
+        <div class="section-head-wrap">
+          <h2 id="comparison-heading" class="section-title">Before and after ClipBox</h2>
+          <p class="section-sublead">How systematic buffer capture replaces standard clipboard data loss.</p>
+        </div>
+
+        <div class="comparison-grid">
+          <div class="comparison-pane">
+            <div class="comparison-label">standard windows clipboard</div>
+            <div class="comparison-content-list">
+              <div class="comparison-row">
+                <span class="comparison-key">Single item retention</span>
+                <span class="comparison-desc">Copying a second item permanently overwrites your previous copy buffer.</span>
+              </div>
+              <div class="comparison-row">
+                <span class="comparison-key">Zero encryption</span>
+                <span class="comparison-desc">API keys and passwords remain in memory unencrypted and visible in plain text.</span>
+              </div>
+              <div class="comparison-row">
+                <span class="comparison-key">Unstructured sorting</span>
+                <span class="comparison-desc">Code, URLs, and sentences sit in an unsearchable single queue.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="comparison-pane">
+            <div class="comparison-label">with clipbox active</div>
+            <div class="comparison-content-list">
+              <div class="comparison-row">
+                <span class="comparison-key">Persistent SQLite database</span>
+                <span class="comparison-desc">All historical clips stored in local SQLite WAL tables with instant retrieval.</span>
+              </div>
+              <div class="comparison-row">
+                <span class="comparison-key">Fernet master passkey</span>
+                <span class="comparison-desc">Sensitive secrets encrypted using PBKDF2 with AES-128-CBC and HMAC-SHA256.</span>
+              </div>
+              <div class="comparison-row">
+                <span class="comparison-key">Deterministic categorization</span>
+                <span class="comparison-desc">Regex heuristics instantly assign URLs, emails, phone numbers, and source code.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section" aria-labelledby="features-heading">
+      <div class="container">
+        <div class="section-head-wrap">
+          <h2 id="features-heading" class="section-title">Core capabilities</h2>
+          <p class="section-sublead">Engineered for desktop responsiveness, security, and low memory usage.</p>
+        </div>
+
+        <div class="features-grid">
+          <div class="feature-block">
+            <h3 class="feature-name">Sub-millisecond capture</h3>
+            <p class="feature-text">Native Windows clipboard polling avoids heavy frameworks, keeping idle memory footprint below 32 megabytes.</p>
+          </div>
+
+          <div class="feature-block">
+            <h3 class="feature-name">Twenty colour palettes</h3>
+            <p class="feature-text">Ten light themes and ten dark themes configured with CSS variables for instant switching through shortcuts.</p>
+          </div>
+
+          <div class="feature-block">
+            <h3 class="feature-name">Recopy timestamp bump</h3>
+            <p class="feature-text">Re-copying an earlier clip refreshes its recency index and brings it back to the top of your queue.</p>
+          </div>
+
+          <div class="feature-block">
+            <h3 class="feature-name">Inline text editor</h3>
+            <p class="feature-text">Preview any clip with word counts and character stats, or edit stored contents without leaving the app.</p>
+          </div>
+
+          <div class="feature-block">
+            <h3 class="feature-name">Clean user autostart</h3>
+            <p class="feature-text">Optional startup uses standard user registry keys, eliminating administrator prompts and UAC alerts.</p>
+          </div>
+
+          <div class="feature-block">
+            <h3 class="feature-name">JSON export & cleanup</h3>
+            <p class="feature-text">Export full history to structured JSON files in one click and purge unpinned clips older than thirty days.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Specifications & Shortcuts -->
+    <section id="specs" class="specs-section" aria-labelledby="specs-heading">
+      <div class="container specs-grid">
+        <div class="specs-table-wrap">
+          <h2 id="specs-heading" class="section-title">System profile</h2>
+          <table class="specs-table">
+            <tbody>
+              <tr>
+                <th scope="row">Target Operating System</th>
+                <td>Windows 10 / 11 (64-bit)</td>
+              </tr>
+              <tr>
+                <th scope="row">Installer Type</th>
+                <td>Inno Setup 6.7.3 Executable</td>
+              </tr>
+              <tr>
+                <th scope="row">Installer Package Size</th>
+                <td>19.9 MB (LZMA2 Ultra)</td>
+              </tr>
+              <tr>
+                <th scope="row">Standalone Binary Size</th>
+                <td>18.1 MB</td>
+              </tr>
+              <tr>
+                <th scope="row">Database Engine</th>
+                <td>SQLite 3 with WAL Journaling</td>
+              </tr>
+              <tr>
+                <th scope="row">Cryptographic Cipher</th>
+                <td>Fernet (AES-128-CBC + HMAC)</td>
+              </tr>
+              <tr>
+                <th scope="row">Desktop Shell</th>
+                <td>PyWebView (Edge WebView2)</td>
+              </tr>
+              <tr>
+                <th scope="row">Privileges Required</th>
+                <td>Lowest (Standard User)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="shortcuts-panel">
+          <h3 class="shortcuts-headline">Keyboard reference</h3>
+          <div class="shortcut-item">
+            <span class="shortcut-action">Focus search query</span>
+            <span class="keycap">Ctrl + F</span>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-action">Toggle theme palette</span>
+            <span class="keycap">Ctrl + T</span>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-action">New manual snippet</span>
+            <span class="keycap">Ctrl + N</span>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-action">Database statistics</span>
+            <span class="keycap">Ctrl + I</span>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-action">Open settings modal</span>
+            <span class="keycap">Ctrl + ,</span>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-action">Close active window</span>
+            <span class="keycap">Esc</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Download Section -->
+    <section class="download-cta-section" aria-labelledby="download-heading">
+      <div class="container">
+        <div class="cta-box">
+          <h2 id="download-heading" class="cta-heading">Install ClipBox on Windows</h2>
+          <p class="cta-body">Download the self-contained Inno Setup installer. Installs in seconds to your local user directory without requiring administrator rights.</p>
+          <div class="cta-button-row">
+            <a href="downloads/ClipBox-Setup-v1.2.0.exe" class="button-primary" download>
+              Download Installer
+            </a>
+            <a href="https://github.com/kiranmayee-abbireddy/clipboard-org" class="button-secondary" target="_blank" rel="noopener noreferrer">
+              View Repository
+            </a>
+          </div>
+          <div class="cta-details-row">
+            <span class="meta-item">SHA256 verified package</span>
+            <span class="meta-divider">/</span>
+            <span class="meta-item">Inno Setup 6</span>
+            <span class="meta-divider">/</span>
+            <span class="meta-item">Uninstaller included</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <div class="footer-brand">ClipBox</div>
+          <p class="footer-desc">Aesthetic, privacy-focused clipboard management utility for Windows desktops.</p>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col-title">Distribution</div>
+          <div class="footer-nav-list">
+            <a href="downloads/ClipBox-Setup-v1.2.0.exe" class="footer-link" download>Inno Setup Installer (.exe)</a>
+            <a href="https://github.com/kiranmayee-abbireddy/clipboard-org/releases" class="footer-link" target="_blank" rel="noopener noreferrer">GitHub Releases</a>
+            <a href="https://github.com/kiranmayee-abbireddy/clipboard-org/blob/master/README.md" class="footer-link" target="_blank" rel="noopener noreferrer">Documentation</a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col-title">Project</div>
+          <div class="footer-nav-list">
+            <a href="https://github.com/kiranmayee-abbireddy/clipboard-org" class="footer-link" target="_blank" rel="noopener noreferrer">Source Code</a>
+            <a href="https://github.com/kiranmayee-abbireddy/clipboard-org/issues" class="footer-link" target="_blank" rel="noopener noreferrer">Issue Tracker</a>
+            <a href="https://opensource.org/licenses/MIT" class="footer-link" target="_blank" rel="noopener noreferrer">MIT License</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span class="footer-copy">ClipBox</span>
+        <span class="footer-copy">Clean Inno Setup 6 packaging</span>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

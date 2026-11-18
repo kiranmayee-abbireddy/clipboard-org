@@ -158,20 +158,41 @@ python src/clipboard_monitor.py
 
 ---
 
-## 📦 Building Standalone Executable (.exe)
+## 📦 Building Standalone Executable & Inno Setup Installer
 
+### 1. Build Standalone Binary (.exe)
 You can build a single, portable `.exe` binary using PyInstaller:
 
 ```bash
 pyinstaller ClipBox.spec
 ```
 
-The resulting standalone executable will be generated at:
-```
-dist/ClipBox.exe
+The resulting standalone executable will be generated at `dist/ClipBox.exe` (18.1 MB).
+
+### 2. Compile Windows Installer (.exe)
+An official Inno Setup script is provided in `installer/clipbox_setup.iss`. Compile it with the Inno Setup command-line compiler:
+
+```powershell
+& "ISCC.exe" installer/clipbox_setup.iss
 ```
 
-The optimized `.spec` file automatically strips unused frameworks and includes all required HTML/CSS/JS frontend assets and the application icon.
+This creates a polished, self-contained Windows wizard installer at:
+```
+dist/installer/ClipBox-Setup-v1.2.0.exe
+```
+
+- **Features**: Installs `ClipBox.exe` to `{autopf}\ClipBox`, adds Start Menu & Desktop shortcuts, creates a clean Windows Uninstaller, and supports optional auto-start on logon.
+- **Privileges**: Runs with `lowest` privileges (no UAC / administrator elevation required).
+
+---
+
+## 🌐 Landing Page
+
+A bespoke product landing page built with Hallmark design principles is located in `landing/`:
+- **Files**: `landing/index.html`, `landing/style.css`, `tokens.css`, `base.css`
+- **Theme**: *Rim* dark theme palette with Switzer and Geist Mono typography
+- **Interactive Workbench**: Live categorized clipboard buffer simulation
+- **Download Link**: Directly serves `landing/downloads/ClipBox-Setup-v1.2.0.exe`
 
 ---
 
@@ -185,6 +206,15 @@ clipboard-org/
 ├── setup.py                   # Package setup configuration
 ├── .gitignore                 # Git ignore rules
 ├── README.md                  # Comprehensive documentation
+├── installer/
+│   └── clipbox_setup.iss      # Inno Setup 6 installer script
+├── landing/                   # Hallmark product landing page
+│   ├── index.html             # Landing page HTML
+│   ├── style.css              # Hallmark Rim theme stylesheet
+│   ├── tokens.css             # Design tokens & color scale
+│   ├── base.css               # Hallmark base typography & resets
+│   └── downloads/
+│       └── ClipBox-Setup-v1.2.0.exe # Compiled downloadable installer
 ├── src/
 │   ├── main.py                # Desktop application entry point (PyWebView)
 │   ├── api.py                 # JavaScript <-> Python API bridge
